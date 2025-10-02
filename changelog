@@ -1,0 +1,10 @@
+
+
+# 2 - 10 - 25
+
+## feat: implement webhook response and add database configuration
+
+- Updated the webhook handler to return a processed response.
+- Added drizzle configuration for PostgreSQL database connection.
+- Created database index file to initialize the database connection.
+- Defined database schemas for admins and uploaded files tables.
