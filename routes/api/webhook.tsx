@@ -1,7 +1,7 @@
 import { define } from "../../utils.ts";
 
 
-export default define.handlers({
+export const handler = define.handlers({
     GET: () => {
         return new Response("Webhook is running");
     }
