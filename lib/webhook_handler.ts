@@ -166,12 +166,7 @@ class WebhookPrivateMessageHandler {
       if (!id) {
         await sendMessage(
           message.chat.id,
-          `
-Hi there! I'm Keisha, your friendly file-sharing assistant. 
-Feel free to send me any files, and I'll generate a shareable link for you. 
-If you ever need to access files, just use the special link I provide. 
-Let's get sharing!
-            `,
+          `Hi there! I'm Kesha, your friendly file-sharing bot.`,
         );
 
         return new Response(JSON.stringify({ ok: true }));
