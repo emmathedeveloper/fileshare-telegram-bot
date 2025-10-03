@@ -18,6 +18,7 @@ export const uploaded_files = pgTable("uploaded_files", {
   message_id: text("message_id").notNull().unique(),
   caption: text("caption"),
   caption_entities: jsonb("caption_entities").$type<(TelegramMessageEntity & Record<string , string>)[]>(),
+  entities: jsonb("entities").$type<(TelegramMessageEntity & Record<string , string>)[]>(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -58,7 +58,8 @@ export default class WebhookHandler {
       uploader_chat_id: message.chat.id.toString(),
       uploader_id: message.from?.id.toString() || admin.telegram_id,
       caption: message.caption || "",
-      caption_entities: message.entities,
+      caption_entities: message.caption_entities,
+      entities: message.entities
     }).returning();
 
     return file_record;
