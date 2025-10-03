@@ -16,11 +16,11 @@ export const handler = define.handlers({
 
         // prefer channel_post if exists (for channels), else use message (for private/group chats)
         if(channel_post) {
-          return WebhookHandler.HandleChannelPost(channel_post);
+          return await WebhookHandler.HandleChannelPost(channel_post);
         }
 
       if (message) {
-          return WebhookHandler.HandlePrivateMessage(message)
+          return await WebhookHandler.HandlePrivateMessage(message)
       }
 
       return new Response("Webhook is running");

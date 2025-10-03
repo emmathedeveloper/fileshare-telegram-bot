@@ -115,9 +115,7 @@ class WebhookChannelPostHandler {
 class WebhookPrivateMessageHandler {
   static async HandleMessage(message: TelegramMessage) {
     //check if the payload has a file
-    if (
-      WebhookHandler.isFile(message)
-    ) {
+    if (WebhookHandler.isFile(message)) {
       const [isAdmin] = await db.select().from(admins).where(
         eq(admins.telegram_id, message.chat.id.toString()),
       );
@@ -128,6 +126,7 @@ class WebhookPrivateMessageHandler {
           message.chat.id,
           "❌ You can't upload files.",
         );
+        
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       }
 
