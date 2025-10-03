@@ -1,16 +1,22 @@
 import { db } from "./db/index.ts";
 import { gate_channels, uploaded_files } from "./db/schemas.ts";
+import { ReplyMarkup, SendMessagePayload } from "./types.ts";
 
 export const TELEGRAM_API_BASE = (token: string) =>
   `https://api.telegram.org/bot${token}`;
 
-export async function sendMessage(chat_id: number, text: string) {
+export async function sendMessage(chat_id: number, text: string , reply_markup?: ReplyMarkup) {
+
+  const response_data: SendMessagePayload = { chat_id, text, parse_mode: "MarkdownV2" }
+
+  if(reply_markup) response_data.reply_markup = reply_markup
+
   await fetch(
     `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/sendMessage`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id, text, parse_mode: "HTML" }),
+      body: JSON.stringify(response_data),
     },
   );
 }

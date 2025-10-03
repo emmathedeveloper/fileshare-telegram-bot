@@ -123,3 +123,118 @@ export type TelegramCallbackQuery = {
   chat_instance: string;
   data?: string;
 };
+
+
+// Telegram Bot API Reply Markup Types
+
+export type KeyboardButton = {
+  text: string;
+  request_user?: {
+    request_id: number;
+    user_is_bot?: boolean;
+    user_is_premium?: boolean;
+  };
+  request_chat?: {
+    request_id: number;
+    chat_is_channel?: boolean;
+    chat_is_forum?: boolean;
+    chat_has_username?: boolean;
+    chat_is_created?: boolean;
+    user_administrator_rights?: any;
+    bot_administrator_rights?: any;
+    bot_is_member?: boolean;
+  };
+  request_contact?: boolean;
+  request_location?: boolean;
+  request_poll?: { type?: "quiz" | "regular" };
+  web_app?: { url: string };
+};
+
+export type InlineKeyboardButton = {
+  text: string;
+  url?: string;
+  callback_data?: string;
+  web_app?: { url: string };
+  login_url?: {
+    url: string;
+    forward_text?: string;
+    bot_username?: string;
+    request_write_access?: boolean;
+  };
+  switch_inline_query?: string;
+  switch_inline_query_current_chat?: string;
+  switch_inline_query_chosen_chat?: {
+    query?: string;
+    allow_user_chats?: boolean;
+    allow_bot_chats?: boolean;
+    allow_group_chats?: boolean;
+    allow_channel_chats?: boolean;
+  };
+  callback_game?: any;
+  pay?: boolean;
+};
+
+// Main reply markup object
+export type ReplyMarkup =
+  | {
+      inline_keyboard: InlineKeyboardButton[][];
+    }
+  | {
+      keyboard: KeyboardButton[][];
+      resize_keyboard?: boolean;
+      one_time_keyboard?: boolean;
+      input_field_placeholder?: string;
+      selective?: boolean;
+    }
+  | {
+      remove_keyboard: true;
+      selective?: boolean;
+    }
+  | {
+      force_reply: true;
+      input_field_placeholder?: string;
+      selective?: boolean;
+    };
+
+
+// --- sendMessage payload type ---
+export interface SendMessagePayload {
+  chat_id: number | string; // user ID, group ID, or @channelusername
+  text: string;
+
+  // Optional parameters
+  message_thread_id?: number; // for forum topics
+  parse_mode?: "MarkdownV2" | "HTML" | "Markdown";
+  entities?: Array<{
+    offset: number;
+    length: number;
+    type:
+      | "mention"
+      | "hashtag"
+      | "cashtag"
+      | "bot_command"
+      | "url"
+      | "email"
+      | "phone_number"
+      | "bold"
+      | "italic"
+      | "underline"
+      | "strikethrough"
+      | "spoiler"
+      | "code"
+      | "pre"
+      | "text_link"
+      | "text_mention"
+      | "custom_emoji";
+    url?: string;
+    user?: { id: number; is_bot?: boolean; first_name?: string };
+    language?: string;
+    custom_emoji_id?: string;
+  }>;
+  disable_web_page_preview?: boolean;
+  disable_notification?: boolean;
+  protect_content?: boolean;
+  reply_to_message_id?: number;
+  allow_sending_without_reply?: boolean;
+  reply_markup?: ReplyMarkup;
+}

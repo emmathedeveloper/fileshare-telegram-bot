@@ -6,7 +6,8 @@
     "build": "vite build",
     "start": "deno serve -A _fresh/server.js",
     "update": "deno run -A -r jsr:@fresh/update .",
-    "db:push": "deno run -A --env-file drizzle-kit push"
+    "db:push": "deno run -A --env-file drizzle-kit push",
+    "db:dev:push": "deno run -A --env-file drizzle-kit push --config=drizzle.dev.config.ts"
   },
   "lint": {
     "rules": {
