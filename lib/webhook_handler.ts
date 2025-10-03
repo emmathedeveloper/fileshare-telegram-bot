@@ -218,18 +218,9 @@ Let's get sharing!
         return new Response(JSON.stringify({ ok: true }));
       }
 
-      if (!message.sender_chat) {
-        await sendMessage(
-          message.chat.id,
-          `Can't identify who you are`,
-        );
-
-        return new Response(JSON.stringify({ ok: true }));
-      }
-
       const [user] = await db.insert(admins).values({
-        telegram_id: message.sender_chat.id.toString(),
-        username: message.sender_chat?.username,
+        telegram_id: message.chat.id.toString(),
+        username: message.chat.username,
       }).returning();
 
       await sendMessage(
