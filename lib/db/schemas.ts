@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { TelegramMessageEntity } from "../types.ts";
 
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -16,6 +17,7 @@ export const uploaded_files = pgTable("uploaded_files", {
   uploader_chat_id: text("uploader_chat_id").notNull(),
   message_id: text("message_id").notNull().unique(),
   caption: text("caption"),
+  caption_entities: jsonb("caption_entities").$type<(TelegramMessageEntity & Record<string , string>)[]>(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 

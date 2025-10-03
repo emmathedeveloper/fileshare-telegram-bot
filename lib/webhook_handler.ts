@@ -58,6 +58,7 @@ export default class WebhookHandler {
       uploader_chat_id: message.chat.id.toString(),
       uploader_id: message.from?.id.toString() || admin.telegram_id,
       caption: message.caption || "",
+      caption_entities: message.entities,
     }).returning();
 
     return file_record;
@@ -218,14 +219,23 @@ Let's get sharing!
         return new Response(JSON.stringify({ ok: true }));
       }
 
+      if (!message.from) {
+        await sendMessage(
+          message.chat.id,
+          `Can't identify who you are`,
+        );
+
+        return new Response(JSON.stringify({ ok: true }));
+      }
+
       const [user] = await db.insert(admins).values({
-        telegram_id: message.chat.id.toString(),
-        username: message.chat.username,
+        telegram_id: message.from.id.toString(),
+        username: message.from.username,
       }).returning();
 
       await sendMessage(
         message.chat.id,
-        `Welcome ${user.username}, you are now an admin`,
+        `Welcome @${user.username}, you are now an admin`,
       );
       return new Response(JSON.stringify({ ok: true }));
     }

@@ -17,7 +17,7 @@ export type TelegramMessage = {
   chat: TelegramChat;
   date: number;
   text?: string;
-  entities?: TelegramMessageEntity[];
+  entities?: (TelegramMessageEntity & Record<string , string>)[];
   caption?: string;
   document?: TelegramDocument;
   photo?: TelegramPhotoSize[];

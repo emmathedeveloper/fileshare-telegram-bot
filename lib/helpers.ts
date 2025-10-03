@@ -14,7 +14,7 @@ export async function sendMessage(
     const response_data: SendMessagePayload = {
       chat_id,
       text,
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
     };
 
     if (reply_markup) response_data.reply_markup = reply_markup;

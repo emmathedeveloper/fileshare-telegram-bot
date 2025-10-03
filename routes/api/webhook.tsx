@@ -7,7 +7,7 @@ export const handler = define.handlers({
     try {
       const data: TelegramUpdate = await ctx.req.json().catch(() => null);
 
-      //   console.log(data);
+        console.log(data);
 
       //check if there is a payload
       //   if (!data || !data.message || !data.channel_post) throw new Error("Invalid payload");
