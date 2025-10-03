@@ -19,11 +19,7 @@ export default class WebhookHandler {
   }
 
   static async HandlePrivateMessage(message: TelegramMessage) {
-    await WebhookPrivateMessageHandler.HandleMessage(message);
-
-    return new Response(JSON.stringify("Received a channel post"), {
-      status: 200,
-    });
+    return await WebhookPrivateMessageHandler.HandleMessage(message);
   }
 
   static isFile(message: TelegramMessage) {
@@ -126,7 +122,7 @@ class WebhookPrivateMessageHandler {
           message.chat.id,
           "❌ You can't upload files.",
         );
-        
+
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       }
 
@@ -231,16 +227,20 @@ Let's get sharing!
         return new Response(JSON.stringify({ ok: true }));
       }
 
-      const [ user ] = await db.insert(admins).values({
+      const [user] = await db.insert(admins).values({
         telegram_id: message.sender_chat.id.toString(),
         username: message.sender_chat?.username,
       }).returning();
 
-        await sendMessage(
-          message.chat.id,
-          `Welcome ${user.username}, you are now an admin`,
-        );
+      await sendMessage(
+        message.chat.id,
+        `Welcome ${user.username}, you are now an admin`,
+      );
       return new Response(JSON.stringify({ ok: true }));
     }
+
+    return new Response(JSON.stringify("Received a channel post"), {
+      status: 200,
+    });
   }
 }
