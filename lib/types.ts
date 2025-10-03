@@ -17,8 +17,8 @@ export type TelegramMessage = {
   chat: TelegramChat;
   date: number;
   text?: string;
-  entities?: (TelegramMessageEntity & Record<string , string>)[];
-  caption_entities?: (TelegramMessageEntity & Record<string , string>)[];
+  entities?: TelegramMessageEntity[];
+  caption_entities?: TelegramMessageEntity[];
   caption?: string;
   document?: TelegramDocument;
   photo?: TelegramPhotoSize[];
@@ -51,7 +51,7 @@ export type TelegramMessageEntity = {
   offset: number;
   length: number;
   type: string; // e.g., "bold", "italic", "bot_command"
-};
+} & Record<string , string>;
 
 export type TelegramDocument = {
   file_id: string;

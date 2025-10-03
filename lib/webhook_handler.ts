@@ -140,14 +140,14 @@ class WebhookPrivateMessageHandler {
         Deno.env.get("TELEGRAM_BOT_USERNAME")
       }?start=${file_record.id}`;
 
-      await sendMessage(
+      await forwardFileMessage(
         message.chat.id,
-        `✅ File saved`,
+        file_record,
         {
           inline_keyboard: [
             [{ text: "⬇️ DOWNLOAD HERE ⬇️", url: link }],
           ],
-        },
+        }
       );
 
       return new Response(JSON.stringify({ ok: true }));

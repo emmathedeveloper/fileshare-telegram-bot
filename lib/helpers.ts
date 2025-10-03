@@ -1,6 +1,10 @@
 import { db } from "./db/index.ts";
 import { gate_channels, uploaded_files } from "./db/schemas.ts";
-import { ReplyMarkup, SendMessagePayload } from "./types.ts";
+import {
+  ReplyMarkup,
+  SendMessagePayload,
+  TelegramMessageEntity,
+} from "./types.ts";
 
 export const TELEGRAM_API_BASE = (token: string) =>
   `https://api.telegram.org/bot${token}`;
@@ -9,12 +13,14 @@ export async function sendMessage(
   chat_id: number,
   text: string,
   reply_markup?: ReplyMarkup,
+  entities?: TelegramMessageEntity[],
 ) {
   try {
     const response_data: SendMessagePayload = {
       chat_id,
       text,
       parse_mode: "Markdown",
+      entities: entities as any,
     };
 
     if (reply_markup) response_data.reply_markup = reply_markup;
@@ -66,6 +72,7 @@ export async function checkUserAccess(userId: number) {
 export async function forwardFileMessage(
   chat_id: number,
   item: typeof uploaded_files.$inferSelect,
+  reply_markup?: ReplyMarkup,
 ) {
   try {
     await fetch(
@@ -77,6 +84,7 @@ export async function forwardFileMessage(
           chat_id: chat_id.toString(),
           from_chat_id: Number(item.uploader_chat_id),
           message_id: Number(item.message_id),
+          reply_markup
         }),
       },
     );
