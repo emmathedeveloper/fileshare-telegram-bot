@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
 import { admins, uploaded_files } from "./db/schemas.ts";
 import { forwardFileMessage, sendMessage } from "./helpers.ts";
-import { TelegramDocument, TelegramMessage } from "./types.ts";
+import { TelegramMessage } from "./types.ts";
 
 export default class WebhookHandler {
   static async HandleChannelPost({ text, ...rest }: TelegramMessage) {
