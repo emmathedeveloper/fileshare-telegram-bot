@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
-import { admins, uploaded_files, user_dialogue } from "./db/schemas.ts";
+import { admins, uploaded_files } from "./db/schemas.ts";
 import { forwardFileMessage, sendMessage } from "./helpers.ts";
 import { TelegramCallbackQuery, TelegramMessage } from "./types.ts";
 import { get } from "node:http";
-import { getStepByName } from "./dialog-steps.ts";
+import { getNextStep, getStepByName } from "./dialog-steps.ts";
 
 // export default class WebhookHandler {
 //   static async HandleChannelPost({ text, ...rest }: TelegramMessage) {
@@ -246,11 +246,19 @@ import { getStepByName } from "./dialog-steps.ts";
 
 export default class WebhookHandler {
   static async HandleCallbackQuery(callback_query: TelegramCallbackQuery) {
-    return WebhookCallbackQueryHandler.HandleCallbackQuery(callback_query);
+    return await WebhookCallbackQueryHandler.HandleCallbackQuery(
+      callback_query,
+    );
   }
 
   static async HandlePrivateMessage(message: TelegramMessage) {
     return await WebhookPrivateMessageHandler.HandleMessage(message);
+  }
+
+  static isFile(message: TelegramMessage) {
+    return message.document || message.photo || message.video ||
+      message.audio ||
+      message.voice;
   }
 
   static SplitKeyAndPayload(text: string, separator: string | RegExp = /\s+/) {
@@ -258,6 +266,41 @@ export default class WebhookHandler {
     const key = parts[0];
     const payload = parts.slice(1).join(" ") || null;
     return [key, payload];
+  }
+
+  static async InsertFileRecord(
+    message: TelegramMessage,
+    admin: typeof admins.$inferSelect,
+  ) {
+    //save the file to the database
+    const [file_record] = await db.insert(uploaded_files).values({
+      telegram_file_id: message.document?.file_id ||
+        message.photo?.[0]?.file_id || message.video?.file_id ||
+        message.audio?.file_id || message.voice?.file_id || "",
+      file_type: message.document
+        ? "document"
+        : message.photo
+        ? "photo"
+        : message.video
+        ? "video"
+        : message.audio
+        ? "audio"
+        : message.voice
+        ? "voice"
+        : "unknown",
+      file_name: message.document?.file_name || message.caption ||
+        "unknown",
+      file_size:
+        (message.document?.file_size || message.photo?.[0]?.file_size ||
+          message.video?.file_size || message.audio?.file_size ||
+          message.voice?.file_size || 0).toString(),
+      message_id: message.message_id.toString(),
+      uploader_chat_id: message.chat.id.toString(),
+      uploader_id: message.from?.id.toString() || admin.telegram_id,
+      media_group_id: message.media_group_id || "",
+    }).returning();
+
+    return file_record;
   }
 }
 
@@ -276,78 +319,76 @@ class DBHelper {
     }).returning();
     return admin;
   }
-
-  static async updateUserDialogueStep(telegram_id: string, step: string, path: string) {
-    const [dialogue] = await db.select().from(user_dialogue).where(
-      eq(user_dialogue.user_telegram_id, telegram_id),
-    );
-
-    if (dialogue) {
-      const [updated] = await db.update(user_dialogue).set({
-        current_step: step,
-        dialogue_path: path,
-      }).where(
-        eq(user_dialogue.user_telegram_id, telegram_id),
-      ).returning();
-      return updated;
-    } else {
-      const [created] = await db.insert(user_dialogue).values({
-        user_telegram_id: telegram_id,
-        current_step: step,
-        dialogue_path: path,
-      }).returning();
-      return created;
-    }
-  }
-
-  static async getUserDialogueStep(telegram_id: string) {
-    const [dialogue] = await db.select().from(user_dialogue).where(
-      eq(user_dialogue.user_telegram_id, telegram_id),
-    );
-    return dialogue;
-  }
 }
+
+const media_groups = new Map()
 
 class WebhookPrivateMessageHandler {
   static async HandleMessage(message: TelegramMessage) {
+    if (message.media_group_id || WebhookHandler.isFile(message)) {
+      const admin = await DBHelper.getAdminByTelegramId(
+        message.chat.id.toString(),
+      );
+
+      //check if the user is an admin
+      if (!admin) {
+        await sendMessage(
+          message.chat.id,
+          "You can't upload files.",
+        );
+
+        return new Response("User not admin");
+      }
+
+      if (message.media_group_id) {
+        //wait for 5 seconds to allow other files in the media group to arrive
+        const media_group_id = message.media_group_id;
+
+        if (!media_groups.has(media_group_id)) {
+          media_groups.set(media_group_id, { messages: [], timeoutId: null });
+        }
+
+        const group = media_groups.get(media_group_id);
+        group.messages.push(message);
+
+        // Reset previous timeout (we expect more messages)
+        clearTimeout(group.timeout_id);
+
+        // 🕒 Wait 1 second after the last message — then treat as complete
+        group.timeout_id = setTimeout(() => {
+          sendMessage(
+            message.chat.id,
+            `Files uploaded successfully!`,
+            {
+              inline_keyboard: [[{
+                text: "DOWNLOAD HERE",
+                url: `https://t.me/${
+                  Deno.env.get("TELEGRAM_BOT_USERNAME")
+                }?start=series_${message.media_group_id}`,
+              }]],
+            },
+          );
+          
+          media_groups.delete(media_group_id);
+        }, 1000);
+
+        await WebhookHandler.InsertFileRecord(message, admin);
+
+        return new Response("Media group file recorded");
+      }
+
+      //check if the payload has a file
+      if (WebhookHandler.isFile(message)) {
+        return await WebhookPrivateMessageHandler.HandleFileUpload(
+          message,
+          admin,
+        );
+      }
+    }
+
     const [command, payload] = WebhookHandler.SplitKeyAndPayload(
       message.text || "",
     );
-
-    const inDialogue = await DBHelper.getUserDialogueStep(message.from?.id.toString() || "");
-
-    if (inDialogue && inDialogue.current_step !== "none") {
-
-      if(command === "/cancel") {
-        await DBHelper.updateUserDialogueStep(message.from?.id.toString() || "" , "none" , "none");
-        await sendMessage(
-          message.chat.id,
-          "❌ Dialogue cancelled. You can start again anytime.",
-        );
-        return new Response("Dialogue cancelled");
-      }
-
-      //user is in dialogue mode - fetch current step and send appropriate message
-      const step = getStepByName(inDialogue.current_step , inDialogue.dialogue_path);
-
-      if(!step) {
-        //something went wrong - reset dialogue
-        await DBHelper.updateUserDialogueStep(message.from?.id.toString() || "" , "none" , "none");
-        await sendMessage(
-          message.chat.id,
-          "❌ An error occurred. Dialogue has been reset. Please start again.",
-        );
-        return new Response("Dialogue error - reset");
-      }else {
-        await sendMessage(
-          message.chat.id,
-          step.message,
-        );
-
-        return new Response("In dialogue mode - step message sent");
-      }
-
-    }
 
     if (command === "/start" && payload) {
       //handle deep link start
@@ -356,42 +397,77 @@ class WebhookPrivateMessageHandler {
 
     if (command === "/admin") {
       //handle admin linking
-      return await WebhookPrivateMessageHandler.HandleAdminLinking(message , payload || "");
+      return await WebhookPrivateMessageHandler.HandleAdminLinking(
+        message,
+        payload || "",
+      );
     }
 
-    if(command === "/upload") {
+    if (command === "/upload") {
       //handle upload initiation
 
-        const admin = await DBHelper.getAdminByTelegramId(message.from?.id.toString() || "");
+      const admin = await DBHelper.getAdminByTelegramId(
+        message.from?.id.toString() || "",
+      );
 
-        //check if the user is an admin
-        if (!admin) {
-          await sendMessage(
-            message.chat.id,
-            "❌ You can't upload files.",
-          );
-
-          return new Response("User not admin");
-        }
-
-        //send upload options
-
+      //check if the user is an admin
+      if (!admin) {
         await sendMessage(
           message.chat.id,
-          "Hello! This is a test message from your bot.",
-          {
-            inline_keyboard: [
-              [{ text: "UPLOAD MOVIE 🎬", callback_data: "upload_movie" }],
-              [{ text: "UPLOAD SERIES 🍿", callback_data: "upload_series" }],
-              [{ text: "UPLOAD FILE 📄", callback_data: "upload_file" }],
-            ],
-          }
-        )
+          "❌ You can't upload files.",
+        );
+
+        return new Response("User not admin");
+      }
+
+      //send upload options
+
+      await sendMessage(
+        message.chat.id,
+        "Hello! This is a test message from your bot.",
+        {
+          inline_keyboard: [
+            [{ text: "UPLOAD MOVIE 🎬", callback_data: "upload_movie" }],
+            [{ text: "UPLOAD SERIES 🍿", callback_data: "upload_series" }],
+            [{ text: "UPLOAD FILE 📄", callback_data: "upload_file" }],
+          ],
+        },
+      );
 
       return new Response("Upload initiation not yet implemented");
     }
 
     return new Response("Received a private message");
+  }
+
+  static async HandleFileUpload(
+    message: TelegramMessage,
+    admin: typeof admins.$inferSelect,
+  ) {
+    //save the file to the database
+    const file_record = await WebhookHandler.InsertFileRecord(
+      message,
+      admin,
+    );
+
+    if (!file_record) throw new Error("Failed to save file");
+
+    // send share link to uploader
+    const link = `https://t.me/${
+      Deno.env.get("TELEGRAM_BOT_USERNAME")
+    }?start=${file_record.id}`;
+
+    await forwardFileMessage(
+      message.chat.id,
+      file_record,
+      {
+        inline_keyboard: [
+          [{ text: "⬇️ DOWNLOAD HERE ⬇️", url: link }],
+        ],
+      },
+    );
+
+    return new Response("File uploaded and link sent");
   }
 
   static async HandleAdminLinking(message: TelegramMessage, code: string) {
@@ -422,7 +498,10 @@ class WebhookPrivateMessageHandler {
       return new Response("Can't identify user");
     }
 
-    const admin = await DBHelper.createAdmin(message.from.id.toString() , message.from.username);
+    const admin = await DBHelper.createAdmin(
+      message.from.id.toString(),
+      message.from.username,
+    );
 
     await sendMessage(
       message.chat.id,
@@ -435,11 +514,8 @@ class WebhookPrivateMessageHandler {
 
 class WebhookCallbackQueryHandler {
   static async HandleCallbackQuery(callback_query: TelegramCallbackQuery) {
-
-    if(callback_query.data === "upload_movie"){
+    if (callback_query.data === "upload_movie") {
       //initiate movie upload dialogue
-      await DBHelper.updateUserDialogueStep(callback_query.from.id.toString() , "upload_movie" , "movie");
-
       await sendMessage(
         callback_query.from.id,
         "Please upload the movie file.",

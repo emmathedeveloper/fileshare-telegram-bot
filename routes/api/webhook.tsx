@@ -8,22 +8,20 @@ export const handler = define.handlers({
     try {
       const data: TelegramUpdate = await ctx.req.json().catch(() => null);
 
-        // console.log(data);
+      // console.log(data);
 
       //check if there is a payload
-        if (!data) throw new Error("Invalid payload");
+      if (!data) throw new Error("Invalid payload");
 
-      const { message , callback_query } = data;
+      const { message, callback_query } = data;
 
-      if(message) {
-
+      if (message) {
         return await WebhookHandler.HandlePrivateMessage(message);
       }
 
-      if(callback_query){
-         return await WebhookHandler.HandleCallbackQuery(callback_query);
+      if (callback_query) {
+        return await WebhookHandler.HandleCallbackQuery(callback_query);
       }
-
 
       // prefer channel_post if exists (for channels), else use message (for private/group chats)
       // if (channel_post) {

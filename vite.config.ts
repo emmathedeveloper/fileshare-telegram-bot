@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [fresh(), tailwindcss()],
   server: {
     allowedHosts: [
-      "conclusion-screensaver-academics-urge.trycloudflare.com"
+      "und-tune-warming-maybe.trycloudflare.com"
     ]
   }
 });

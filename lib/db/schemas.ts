@@ -1,10 +1,13 @@
 import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { TelegramMessageEntity } from "../types.ts";
+import { group } from "node:console";
 
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text().notNull().unique(),
   username: text().default("user"),
+  upload_status: text().default("idle"), // idle, uploading waiting_for_caption, waiting_for_thumbnail, waiting_for_confirmation
+  added_at: timestamp("added_at").defaultNow().notNull(),
 });
 
 export const uploaded_files = pgTable("uploaded_files", {
@@ -13,12 +16,10 @@ export const uploaded_files = pgTable("uploaded_files", {
   file_type: text().notNull(),
   file_name: text().notNull(),
   file_size: text().notNull(),
+  media_group_id: text().default(""),
   uploader_id: text("uploader_id").references(() => admins.telegram_id).notNull(),
   uploader_chat_id: text("uploader_chat_id").notNull(),
   message_id: text("message_id").notNull().unique(),
-  caption: text("caption"),
-  caption_entities: jsonb("caption_entities").$type<(TelegramMessageEntity)[]>(),
-  entities: jsonb("entities").$type<(TelegramMessageEntity & Record<string , string>)[]>(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -26,11 +27,4 @@ export const gate_channels = pgTable("gate_channels", {
   id: uuid("id").primaryKey().defaultRandom(),
   channel_id: text().notNull().unique(),
   added_at: timestamp("added_at").defaultNow().notNull(),
-});
-
-export const user_dialogue = pgTable("user_dialog", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  user_telegram_id: text().references(() => admins.telegram_id).notNull(),
-  current_step: text().default("none").notNull(),
-  dialogue_path: text().default("none").notNull(),
 });

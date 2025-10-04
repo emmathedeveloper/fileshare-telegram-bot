@@ -3,7 +3,6 @@ import { gate_channels, uploaded_files } from "./db/schemas.ts";
 import {
   ReplyMarkup,
   SendMessagePayload,
-  TelegramMessageEntity,
 } from "./types.ts";
 
 export const TELEGRAM_API_BASE = (token: string) =>

@@ -27,6 +27,7 @@ export type TelegramMessage = {
   voice?: TelegramVoice;
   animation?: TelegramAnimation;
   sticker?: TelegramSticker;
+  media_group_id?: string;
 };
 
 export type TelegramUser = {
