@@ -10,3 +10,13 @@
 - Defined database schemas for admins and uploaded files tables.
 
 ## feat: add webhook handler and database schemas for file uploads and channel linking
+
+
+# 4 - 10 - 25
+Add user dialogue management and enhance webhook handling
+
+- Introduced user_dialogue table schema for managing user dialogues.
+- Updated WebhookHandler to handle callback queries and manage user dialogues.
+- Implemented dialogue steps for movie and series uploads.
+- Enhanced webhook handler to process callback queries and private messages.
+- Added server configuration to vite.config.ts for allowed hosts.

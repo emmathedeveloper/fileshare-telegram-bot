@@ -13,14 +13,11 @@ export async function sendMessage(
   chat_id: number,
   text: string,
   reply_markup?: ReplyMarkup,
-  entities?: TelegramMessageEntity[],
 ) {
   try {
     const response_data: SendMessagePayload = {
       chat_id,
       text,
-      parse_mode: "Markdown",
-      entities: entities as any,
     };
 
     if (reply_markup) response_data.reply_markup = reply_markup;

@@ -27,3 +27,10 @@ export const gate_channels = pgTable("gate_channels", {
   channel_id: text().notNull().unique(),
   added_at: timestamp("added_at").defaultNow().notNull(),
 });
+
+export const user_dialogue = pgTable("user_dialog", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_telegram_id: text().references(() => admins.telegram_id).notNull(),
+  current_step: text().default("none").notNull(),
+  dialogue_path: text().default("none").notNull(),
+});
