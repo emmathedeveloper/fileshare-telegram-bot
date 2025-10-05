@@ -555,40 +555,6 @@ class WebhookPrivateMessageHandler {
       );
     }
 
-    if (command === "/upload") {
-      //handle upload initiation
-
-      const admin = await DBHelper.getAdminByTelegramId(
-        message.from?.id.toString() || "",
-      );
-
-      //check if the user is an admin
-      if (!admin) {
-        await sendMessage(
-          message.chat.id,
-          "❌ You can't upload files.",
-        );
-
-        return new Response("User not admin");
-      }
-
-      //send upload options
-
-      await sendMessage(
-        message.chat.id,
-        "Hello! This is a test message from your bot.",
-        {
-          inline_keyboard: [
-            [{ text: "UPLOAD MOVIE 🎬", callback_data: "upload_movie" }],
-            [{ text: "UPLOAD SERIES 🍿", callback_data: "upload_series" }],
-            [{ text: "UPLOAD FILE 📄", callback_data: "upload_file" }],
-          ],
-        },
-      );
-
-      return new Response("Upload initiation not yet implemented");
-    }
-
     return new Response("Received a private message");
   }
 
