@@ -1,12 +1,10 @@
 import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { TelegramMessageEntity } from "../types.ts";
-import { group } from "node:console";
 
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text().notNull().unique(),
   username: text().default("user"),
-  upload_status: text().default("idle"), // idle, uploading waiting_for_caption, waiting_for_thumbnail, waiting_for_confirmation
+  upload_step: jsonb().$type<{ status: string , data?: any }>().default({ status: 'idle' , data: '' }).notNull(), // idle, uploading waiting_for_caption, waiting_for_thumbnail,
   added_at: timestamp("added_at").defaultNow().notNull(),
 });
 

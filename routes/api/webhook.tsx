@@ -1,4 +1,3 @@
-import { sendMessage } from "../../lib/helpers.ts";
 import { TelegramUpdate } from "../../lib/types.ts";
 import WebhookHandler from "../../lib/webhook_handler.ts";
 import { define } from "../../utils.ts";

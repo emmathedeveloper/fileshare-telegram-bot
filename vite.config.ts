@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [fresh(), tailwindcss()],
   server: {
     allowedHosts: [
-      "und-tune-warming-maybe.trycloudflare.com"
+      "teacher-certification-pipe-exposed.trycloudflare.com"
     ]
   }
 });

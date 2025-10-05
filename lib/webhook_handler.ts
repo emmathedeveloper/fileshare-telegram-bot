@@ -3,8 +3,6 @@ import { db } from "./db/index.ts";
 import { admins, uploaded_files } from "./db/schemas.ts";
 import { forwardFileMessage, sendMessage } from "./helpers.ts";
 import { TelegramCallbackQuery, TelegramMessage } from "./types.ts";
-import { get } from "node:http";
-import { getNextStep, getStepByName } from "./dialog-steps.ts";
 
 // export default class WebhookHandler {
 //   static async HandleChannelPost({ text, ...rest }: TelegramMessage) {
@@ -278,7 +276,7 @@ export default class WebhookHandler {
         message.photo?.[0]?.file_id || message.video?.file_id ||
         message.audio?.file_id || message.voice?.file_id || "",
       file_type: message.document
-        ? "document"
+        ? message.document.mime_type || "document"
         : message.photo
         ? "photo"
         : message.video
@@ -316,12 +314,15 @@ class DBHelper {
     const [admin] = await db.insert(admins).values({
       telegram_id,
       username,
-    }).returning();
+    }).returning().onConflictDoUpdate({
+      target: admins.telegram_id,
+      set: { username },
+    });
     return admin;
   }
 }
 
-const media_groups = new Map()
+const media_groups = new Map();
 
 class WebhookPrivateMessageHandler {
   static async HandleMessage(message: TelegramMessage) {
@@ -355,26 +356,89 @@ class WebhookPrivateMessageHandler {
         clearTimeout(group.timeout_id);
 
         // 🕒 Wait 1 second after the last message — then treat as complete
-        group.timeout_id = setTimeout(() => {
+        group.timeout_id = setTimeout(async () => {
           sendMessage(
             message.chat.id,
-            `Files uploaded successfully!`,
-            {
-              inline_keyboard: [[{
-                text: "DOWNLOAD HERE",
-                url: `https://t.me/${
-                  Deno.env.get("TELEGRAM_BOT_USERNAME")
-                }?start=series_${message.media_group_id}`,
-              }]],
-            },
+            `
+        Files uploaded successfully!.
+
+        Download link: https://t.me/${
+              Deno.env.get("TELEGRAM_BOT_USERNAME")
+            }?start=series_${media_group_id}
+      `,
           );
-          
+
           media_groups.delete(media_group_id);
+
+          await db.update(admins).set({
+            upload_step: {
+              status: "waiting_for_series_caption_art",
+              data: media_group_id,
+            },
+          }).where(eq(admins.id, admin.id));
+
+          sendMessage(
+            message.chat.id,
+            "Please send a caption art (image) for this series, or /skip to skip this step.",
+          );
         }, 1000);
 
         await WebhookHandler.InsertFileRecord(message, admin);
 
         return new Response("Media group file recorded");
+      }
+
+      //check if the payload has a file
+      if (
+        WebhookHandler.isFile(message) &&
+        (admin.upload_step.status === "waiting_for_series_caption_art" ||
+          admin.upload_step.status === "waiting_for_file_caption_art")
+      ) {
+        // this is the caption art for the series
+
+        if (!message.photo) {
+          console.log("No photo in caption art message");
+          await sendMessage(
+            message.chat.id,
+            "Please send an image as caption art, or /skip to skip this step.",
+          );
+          return new Response("Waiting for valid caption art");
+        }
+
+        await db.update(admins).set({
+          upload_step: { status: "idle", data: "" },
+        }).where(eq(admins.id, admin.id));
+
+        const file_record = await WebhookHandler.InsertFileRecord(
+          message,
+          admin,
+        );
+
+        if (!file_record) throw new Error("Failed to save file");
+
+        await forwardFileMessage(
+          message.chat.id,
+          file_record,
+          {
+            inline_keyboard: [[{
+              text: "DOWNLOAD HERE",
+              url: `https://t.me/${
+                Deno.env.get("TELEGRAM_BOT_USERNAME")
+              }?start=${
+                admin.upload_step.status == "waiting_for_series_caption_art"
+                  ? "series_"
+                  : ""
+              }${admin.upload_step.data}`,
+            }]],
+          },
+        );
+
+        await sendMessage(
+          message.chat.id,
+          "Caption art received. Upload process completed.",
+        );
+
+        return new Response("Caption art received");
       }
 
       //check if the payload has a file
@@ -390,8 +454,87 @@ class WebhookPrivateMessageHandler {
       message.text || "",
     );
 
+    if (command === "/skip") {
+      const admin = await DBHelper.getAdminByTelegramId(
+        message.chat.id.toString(),
+      );
+
+      if (!admin) {
+        await sendMessage(
+          message.chat.id,
+          "You can't perform this action.",
+        );
+
+        return new Response("User not admin");
+      }
+
+      if (admin.upload_step.status !== "idle") {
+        await sendMessage(
+          message.chat.id,
+          "Caption art skipped for this upload.",
+        );
+
+        await sendMessage(
+          message.chat.id,
+          `
+        Caption art skipped. Upload process completed.
+
+        Download link: https://t.me/${
+            Deno.env.get("TELEGRAM_BOT_USERNAME")
+          }?start=${
+            admin.upload_step.status == "waiting_for_series_caption_art"
+              ? "series_"
+              : ""
+          }${admin.upload_step.data}
+      `,
+        );
+
+        await db.update(admins).set({
+          upload_step: { status: "idle", data: "" },
+        })
+          .where(eq(admins.id, admin.id));
+
+        return new Response("Skipped caption art");
+      }
+
+      return new Response("Upload process skipped");
+    }
+
     if (command === "/start" && payload) {
-      //handle deep link start
+      // return new Response("Start with payload handling not yet implemented");
+
+      if (payload.startsWith("series_")) {
+        const media_group_id = payload.replace("series_", "").trim();
+
+        const files = await db.select().from(uploaded_files).where(
+          eq(uploaded_files.media_group_id, media_group_id),
+        );
+
+        if (files.length === 0) {
+          await sendMessage(message.chat.id, "Files not found or expired.");
+          return new Response("No files found for media group");
+        }
+
+        for (const file of files) {
+          await forwardFileMessage(message.chat.id, file);
+        }
+
+        return new Response("Series files forwarded");
+      }
+
+      const res = await db.select().from(uploaded_files).where(
+        eq(uploaded_files.id, payload),
+      ).limit(1);
+      const item = res[0];
+
+      if (!item) {
+        await sendMessage(message.chat.id, "❌ File not found or expired.");
+        return new Response("File not found");
+      }
+
+      // Forward original message
+      await forwardFileMessage(message.chat.id, item);
+
       return new Response("Received a deep link start");
     }
 
@@ -452,19 +595,27 @@ class WebhookPrivateMessageHandler {
 
     if (!file_record) throw new Error("Failed to save file");
 
-    // send share link to uploader
-    const link = `https://t.me/${
-      Deno.env.get("TELEGRAM_BOT_USERNAME")
-    }?start=${file_record.id}`;
-
-    await forwardFileMessage(
-      message.chat.id,
-      file_record,
-      {
-        inline_keyboard: [
-          [{ text: "⬇️ DOWNLOAD HERE ⬇️", url: link }],
-        ],
+    await db.update(admins).set({
+      upload_step: {
+        status: "waiting_for_file_caption_art",
+        data: file_record.id,
       },
+    }).where(eq(admins.id, admin.id));
+
+    await sendMessage(
+      message.chat.id,
+      `
+        File uploaded successfully!.
+
+    Download link: https://t.me/${
+        Deno.env.get("TELEGRAM_BOT_USERNAME")
+      }?start=${file_record.id}
+      `,
+    );
+
+    await sendMessage(
+      message.chat.id,
+      "Please send a caption art (image) for this file, or /skip to skip this step.",
     );
 
     return new Response("File uploaded and link sent");

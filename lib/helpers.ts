@@ -88,3 +88,74 @@ export async function forwardFileMessage(
     console.log(error);
   }
 }
+
+export async function forwardCaptionArtMessage(
+  chat_id: number,
+  from_chat_id: number,
+  message_id: number,
+  reply_markup?: ReplyMarkup,
+) {
+  try {
+    await fetch(
+      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/copyMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chat_id.toString(),
+          from_chat_id,
+          message_id,
+          reply_markup
+        }),
+      },
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function forwardMediaGroup(
+  chat_id: number,
+  items: typeof uploaded_files.$inferSelect[],
+  reply_markup?: ReplyMarkup,
+) {
+  try {
+    const media = items.map((item) => {
+
+      let mediaType = item.file_type;
+
+      if(mediaType.startsWith("video/")) {
+        mediaType = "video";
+      } else if(mediaType.startsWith("audio/")) {
+        mediaType = "audio";
+      } else if(mediaType.startsWith("image/")) {
+        mediaType = "photo";
+      } else if(mediaType === "application/pdf") {
+        mediaType = "document";
+      } else {
+        mediaType = "document"; // default to document for other types
+      }
+
+      return {
+        type: mediaType,
+        media: item.telegram_file_id,
+        caption: item.file_name,
+      };
+    });
+
+    await fetch(
+      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/sendMediaGroup`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chat_id.toString(),
+          media,
+          reply_markup
+        }),
+      },
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
