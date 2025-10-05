@@ -503,6 +503,15 @@ class WebhookPrivateMessageHandler {
     if (command === "/start" && payload) {
       // return new Response("Start with payload handling not yet implemented");
 
+      if(!payload){
+        await sendMessage(
+          message.chat.id,
+          `Hi there! I'm Kesha, your friendly file-sharing bot.`,
+        );
+
+        return new Response("No payload provided");
+      }
+
       if (payload.startsWith("series_")) {
         const media_group_id = payload.replace("series_", "").trim();
 
