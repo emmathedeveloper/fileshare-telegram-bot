@@ -23,7 +23,7 @@ export const handler = define.handlers({
       ) {
         const [channel] = await db.insert(registered_channels).values({
           channel_id: my_chat_member.chat.id.toString(),
-        }).onConflictDoNothing().returning();
+        }).onConflictDoNothing({ target: registered_channels.channel_id }).returning();
 
         return new Response("Channel registered: " + channel?.channel_id);
       }
