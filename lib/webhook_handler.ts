@@ -300,7 +300,7 @@ class WebhookPrivateMessageHandler {
       if (!payload) {
         await sendMessage(
           message.chat.id,
-          `Hi there! I'm Kesha, your friendly file-sharing bot.`,
+          `Hi there! I'm your friendly file-sharing bot.`,
           bot_token,
         );
 
@@ -328,9 +328,6 @@ class WebhookPrivateMessageHandler {
         const { status, channels } = channel_stats;
 
         if (status == false) {
-
-          console.log("Sending")
-
           await sendMessage(
             message.chat.id,
             `You haven't joined the following channels.\n\nJoin to proceed with download.`,
