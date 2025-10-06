@@ -16,6 +16,7 @@
     "jsr:@std/fmt@^1.0.8": "1.0.8",
     "jsr:@std/fs@1": "1.0.19",
     "jsr:@std/html@1": "1.0.4",
+    "jsr:@std/http@*": "1.0.20",
     "jsr:@std/http@^1.0.15": "1.0.20",
     "jsr:@std/internal@^1.0.10": "1.0.10",
     "jsr:@std/json@^1.0.2": "1.0.2",
@@ -45,6 +46,7 @@
     "npm:preact-render-to-string@^6.5.11": "6.6.2_preact@10.27.2",
     "npm:preact@^10.27.0": "10.27.2",
     "npm:preact@^10.27.2": "10.27.2",
+    "npm:react-icons@^5.5.0": "5.5.0_react@19.2.0",
     "npm:rollup@^4.50.0": "4.52.3",
     "npm:tailwindcss@^4.1.10": "4.1.14",
     "npm:tsx@^4.20.6": "4.20.6",
@@ -79,7 +81,7 @@
         "jsr:@std/fmt@^1.0.8",
         "jsr:@std/fs",
         "jsr:@std/html",
-        "jsr:@std/http",
+        "jsr:@std/http@^1.0.15",
         "jsr:@std/jsonc",
         "jsr:@std/media-types",
         "jsr:@std/path@1",
@@ -1485,6 +1487,15 @@
     "preact@10.27.2": {
       "integrity": "sha512-5SYSgFKSyhCbk6SrXyMpqjb5+MQBgfvEKE/OC+PujcY34sOpqtr+0AZQtPYx5IA6VxynQ7rUPCtKzyovpj9Bpg=="
     },
+    "react-icons@5.5.0_react@19.2.0": {
+      "integrity": "sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==",
+      "dependencies": [
+        "react"
+      ]
+    },
+    "react@19.2.0": {
+      "integrity": "sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ=="
+    },
     "resolve-pkg-maps@1.0.0": {
       "integrity": "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="
     },
@@ -1684,6 +1695,7 @@
     "dependencies": [
       "jsr:@fresh/core@^2.1.1",
       "jsr:@fresh/plugin-vite@^1.0.4",
+      "jsr:@std/http@*",
       "npm:@neondatabase/serverless@^1.0.2",
       "npm:@preact/signals@^2.3.1",
       "npm:@tailwindcss/vite@^4.1.12",
@@ -1692,6 +1704,7 @@
       "npm:drizzle-kit@~0.31.5",
       "npm:drizzle-orm@~0.44.6",
       "npm:preact@^10.27.2",
+      "npm:react-icons@^5.5.0",
       "npm:tailwindcss@^4.1.10",
       "npm:tsx@^4.20.6",
       "npm:vite@^7.1.3"

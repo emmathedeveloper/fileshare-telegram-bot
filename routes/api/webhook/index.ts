@@ -30,12 +30,12 @@ export const handler = define.handlers({
 
       // Handle bot being removed from a channel
       if(my_chat_member && my_chat_member.new_chat_member.status === "left") {
-        await db.delete(registered_channels).where(
+        const [channel] = await db.delete(registered_channels).where(
           eq(registered_channels.channel_id , my_chat_member.chat.id.toString())
-        );
+        ).returning();
 
-        await db.delete(bot_channels).where(
-          eq(bot_channels.channel_id , my_chat_member.chat.id.toString())
+        if(channel) await db.delete(bot_channels).where(
+          eq(bot_channels.channel_id , channel.id)
         );
 
         return new Response("Channel unregistered: " + my_chat_member.chat.id);

@@ -196,7 +196,7 @@ export async function hasJoinedAllChannels(user_id: number , bot_id: string){
   }
 }
 
-async function getChannelInfo(channelId: string) : Promise<TelegramChat | undefined> {
+export async function getChannelInfo(channelId: string) : Promise<TelegramChat | undefined> {
   try {
     const url = `https://api.telegram.org/bot${Deno.env.get("TELEGRAM_BOT_TOKEN")}/getChat`;
     
