@@ -13,7 +13,7 @@ export const handler = define.handlers({
     try {
       // Get the base URL of the request
       // replace http with https (for local testing with cloudflare tunnel)
-      const base_url = new URL(ctx.req.url).origin.replace(/^http/, "https");
+      const base_url = new URL(ctx.req.url).origin.replace(/^http:\/\//, "https");
 
       // Parse the JSON body
       const data: RequestBodyPayload = await ctx.req.json().catch(() => null);

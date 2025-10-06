@@ -9,13 +9,11 @@ export default define.page(function Home(ctx) {
   console.log("Shared value " + ctx.state.shared);
 
   return (
-    <div class="px-4 py-8 mx-auto fresh-gradient min-h-screen">
+    <div class="px-4 py-8 mx-auto min-h-screen">
       <Head>
         <title>Fresh counter</title>
       </Head>
-      <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
-        <h1>Filesharebot</h1>
-      </div>
+      
     </div>
   );
 });
