@@ -22,7 +22,10 @@ const RefreshBotWebhookButton = ({ botId } : RefreshBotWebhookButtonProps) => {
       if (!response.ok) throw new Error("Something went wrong");
 
       const data = await response.json();
+
+      refresh_state.value = "success"
     } catch (error) {
+        console.log(error)
       refresh_state.value = "error";
     }
   };

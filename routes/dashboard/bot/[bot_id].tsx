@@ -2,7 +2,7 @@ import { Head } from "fresh/runtime";
 import { define } from "../../../utils.ts";
 import { page } from "fresh";
 import { db } from "../../../lib/db/index.ts";
-import { FaArrowLeft, FaPlus } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import { TelegramChat } from "../../../lib/types.ts";
 import { getChannelInfo } from "../../../lib/helpers.ts";
 import ConnectChannelButton from "../../../islands/ConnectChannelButton.tsx";
