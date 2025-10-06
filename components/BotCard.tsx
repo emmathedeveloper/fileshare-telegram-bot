@@ -16,7 +16,7 @@ const BotCard = ({ bot } : BotCardProps) => {
       <section class="flex items-center gap-2">
         <div class="flex items-center gap-2">
           <FaUsers />
-          <p>{bot.bot_channels.length} channel(s)</p>
+          <p>{bot.bot_channels.length} CHANNELS(S)</p>
         </div>
       </section>
     </a>

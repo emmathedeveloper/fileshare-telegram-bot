@@ -1,9 +1,8 @@
 import { page } from "fresh";
 import { define } from "../../../utils.ts";
 import { db } from "../../../lib/db/index.ts";
-import { bots } from "../../../lib/db/schemas.ts";
 import { Head } from "fresh/runtime";
-import { FaPlus, FaSearch, FaUsers } from "react-icons/fa";
+import { FaPlus, FaSearch } from "react-icons/fa";
 import BotCard from "../../../components/BotCard.tsx";
 
 export const handler = define.handlers({

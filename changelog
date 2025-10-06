@@ -37,3 +37,6 @@ Refactor bot webhook handling and database interactions
 - Added a CSV file for uploaded media files and a TODO list for future enhancements.
 
 Add dashboard layout, bot management, and login functionality; refactor styles and helper functions
+
+
+Add channel management features: implement channel connection/disconnection, enhance bot webhook handling, and improve UI components

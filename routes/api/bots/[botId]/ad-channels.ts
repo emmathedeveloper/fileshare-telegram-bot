@@ -87,4 +87,31 @@ export const handler = define.handlers({
       });
     }
   },
+  DELETE: async (ctx) => {
+    try {
+      const bot_id = ctx.params.botId;
+
+      const data: { channel_id: string } = await ctx.req
+        .json()
+        .catch(() => null);
+
+      if (!data || !data.channel_id) {
+        return new Response("Invalid payload", { status: 400 });
+      }
+
+      await db.delete(bot_channels).where(
+        and(
+          eq(bot_channels.bot_id, bot_id),
+          eq(bot_channels.channel_id , data.channel_id)
+        )
+      );
+
+      return new Response("Channel disconnect from bot", { status: 200 });
+    } catch (error) {
+      console.error(error);
+      return new Response((error as Error)?.message || "Invalid request", {
+        status: 400,
+      });
+    }
+  },
 });
