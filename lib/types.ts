@@ -7,8 +7,8 @@ export type TelegramUpdate = {
   channel_post?: TelegramMessage;
   edited_channel_post?: TelegramMessage;
   // You can add more (inline_query, my_chat_member, etc.) if needed
+  my_chat_member?: TelegramMyChatMember;
 };
-
 
 export type TelegramMessage = {
   message_id: number;
@@ -46,13 +46,14 @@ export type TelegramChat = {
   username?: string;
   first_name?: string;
   last_name?: string;
+  invite_link?: string
 };
 
 export type TelegramMessageEntity = {
   offset: number;
   length: number;
   type: string; // e.g., "bold", "italic", "bot_command"
-} & Record<string , string>;
+} & Record<string, string>;
 
 export type TelegramDocument = {
   file_id: string;
@@ -126,6 +127,73 @@ export type TelegramCallbackQuery = {
   data?: string;
 };
 
+export interface TelegramMyChatMember {
+  chat: {
+    id: number;
+    title?: string;
+    username?: string;
+    type: "private" | "group" | "supergroup" | "channel";
+    first_name?: string;
+    last_name?: string;
+  };
+  from: {
+    id: number;
+    is_bot: boolean;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    language_code?: string;
+  };
+  date: number;
+  old_chat_member: TelegramChatMember;
+  new_chat_member: TelegramChatMember;
+}
+
+export interface TelegramChatMember {
+  user: {
+    id: number;
+    is_bot: boolean;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    language_code?: string;
+  };
+  status:
+    | "creator"
+    | "administrator"
+    | "member"
+    | "restricted"
+    | "left"
+    | "kicked";
+  custom_title?: string;
+  is_anonymous?: boolean;
+  can_be_edited?: boolean;
+  can_manage_chat?: boolean;
+  can_change_info?: boolean;
+  can_delete_messages?: boolean;
+  can_invite_users?: boolean;
+  can_restrict_members?: boolean;
+  can_pin_messages?: boolean;
+  can_promote_members?: boolean;
+  can_manage_video_chats?: boolean;
+  can_post_messages?: boolean;
+  can_edit_messages?: boolean;
+  can_delete_stories?: boolean;
+  can_post_stories?: boolean;
+  can_edit_stories?: boolean;
+  can_manage_topics?: boolean;
+  can_send_messages?: boolean;
+  can_send_audios?: boolean;
+  can_send_documents?: boolean;
+  can_send_photos?: boolean;
+  can_send_videos?: boolean;
+  can_send_video_notes?: boolean;
+  can_send_voice_notes?: boolean;
+  can_send_polls?: boolean;
+  can_send_other_messages?: boolean;
+  can_add_web_page_previews?: boolean;
+  until_date?: number;
+}
 
 // Telegram Bot API Reply Markup Types
 
@@ -179,25 +247,24 @@ export type InlineKeyboardButton = {
 // Main reply markup object
 export type ReplyMarkup =
   | {
-      inline_keyboard: InlineKeyboardButton[][];
-    }
+    inline_keyboard: InlineKeyboardButton[][];
+  }
   | {
-      keyboard: KeyboardButton[][];
-      resize_keyboard?: boolean;
-      one_time_keyboard?: boolean;
-      input_field_placeholder?: string;
-      selective?: boolean;
-    }
+    keyboard: KeyboardButton[][];
+    resize_keyboard?: boolean;
+    one_time_keyboard?: boolean;
+    input_field_placeholder?: string;
+    selective?: boolean;
+  }
   | {
-      remove_keyboard: true;
-      selective?: boolean;
-    }
+    remove_keyboard: true;
+    selective?: boolean;
+  }
   | {
-      force_reply: true;
-      input_field_placeholder?: string;
-      selective?: boolean;
-    };
-
+    force_reply: true;
+    input_field_placeholder?: string;
+    selective?: boolean;
+  };
 
 // --- sendMessage payload type ---
 export interface SendMessagePayload {

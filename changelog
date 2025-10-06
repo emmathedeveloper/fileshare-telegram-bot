@@ -20,3 +20,18 @@ Add user dialogue management and enhance webhook handling
 - Implemented dialogue steps for movie and series uploads.
 - Enhanced webhook handler to process callback queries and private messages.
 - Added server configuration to vite.config.ts for allowed hosts.
+
+# 6 - 10 - 25
+
+Refactor bot webhook handling and database interactions
+
+- Removed the old webhook handler file and replaced it with a new implementation that includes bot ID handling.
+- Updated Vite configuration to change the allowed host.
+- Added database helper functions for retrieving bot channels.
+- Implemented encryption and decryption utilities for secure token storage.
+- Created new API routes for managing bot channels, including GET and POST methods for channel registration and connection.
+- Added webhook handling for bot admin status changes in channels.
+- Implemented channel registration and unregistration logic in the webhook.
+- Added a new endpoint for retrieving registered channels.
+- Updated the bot registration process to include token validation and webhook setup.
+- Added a CSV file for uploaded media files and a TODO list for future enhancements.

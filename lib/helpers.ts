@@ -1,8 +1,10 @@
+import { getBotChannels } from "./db/helpers.ts";
 import { db } from "./db/index.ts";
-import { gate_channels, uploaded_files } from "./db/schemas.ts";
+import { registered_channels, uploaded_files } from "./db/schemas.ts";
 import {
   ReplyMarkup,
   SendMessagePayload,
+  TelegramChat,
 } from "./types.ts";
 
 export const TELEGRAM_API_BASE = (token: string) =>
@@ -11,6 +13,7 @@ export const TELEGRAM_API_BASE = (token: string) =>
 export async function sendMessage(
   chat_id: number,
   text: string,
+  bot_token: string,
   reply_markup?: ReplyMarkup,
 ) {
   try {
@@ -22,7 +25,7 @@ export async function sendMessage(
     if (reply_markup) response_data.reply_markup = reply_markup;
 
     await fetch(
-      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/sendMessage`,
+      `${TELEGRAM_API_BASE(bot_token)}/sendMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,45 +37,15 @@ export async function sendMessage(
   }
 }
 
-async function isUserInChannel(userId: number, channel: string) {
-  try {
-    const res = await fetch(
-      `https://api.telegram.org/bot${Deno.env.get(
-        "TELEGRAM_BOT_TOKEN",
-      )!}/getChatMember?chat_id=${channel}&user_id=${userId}`,
-    );
-    const data = await res.json();
-
-    if (!data.ok) return false;
-
-    const status = data.result.status;
-    return ["member", "administrator", "creator"].includes(status);
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-export async function checkUserAccess(userId: number) {
-  const all_gate_channels = await db.select().from(gate_channels);
-  const gate_channel_ids = all_gate_channels.map((c) => c.channel_id);
-
-  for (const channel of gate_channel_ids) {
-    const joined = await isUserInChannel(userId, channel);
-    if (!joined) {
-      return false;
-    }
-  }
-  return true;
-}
-
 export async function forwardFileMessage(
   chat_id: number,
   item: typeof uploaded_files.$inferSelect,
+  bot_token: string,
   reply_markup?: ReplyMarkup,
 ) {
   try {
     await fetch(
-      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/copyMessage`,
+      `${TELEGRAM_API_BASE(bot_token)}/copyMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,11 +66,12 @@ export async function forwardCaptionArtMessage(
   chat_id: number,
   from_chat_id: number,
   message_id: number,
+  bot_token: string,
   reply_markup?: ReplyMarkup,
 ) {
   try {
     await fetch(
-      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/copyMessage`,
+      `${TELEGRAM_API_BASE(bot_token)}/copyMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -117,6 +91,7 @@ export async function forwardCaptionArtMessage(
 export async function forwardMediaGroup(
   chat_id: number,
   items: typeof uploaded_files.$inferSelect[],
+  bot_token: string,
   reply_markup?: ReplyMarkup,
 ) {
   try {
@@ -144,7 +119,7 @@ export async function forwardMediaGroup(
     });
 
     await fetch(
-      `${TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!)}/sendMediaGroup`,
+      `${TELEGRAM_API_BASE(bot_token)}/sendMediaGroup`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,5 +132,94 @@ export async function forwardMediaGroup(
     );
   } catch (error) {
     console.log(error);
+  }
+}
+
+
+export async function checkChannelMember(channel_id: string, user_id: number) {
+
+  try{
+    const api_url = TELEGRAM_API_BASE(Deno.env.get("TELEGRAM_BOT_TOKEN")!) + "/getChatMember";
+  
+    const payload = {
+      chat_id: channel_id,
+      user_id: user_id
+    };
+  
+    const response = await fetch(api_url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  
+    const data = await response.json();
+  
+    if (!data.ok) {
+      throw new Error(`Telegram API error: ${data.description}`);
+    }
+  
+    const member_status = data.result.status;
+  
+    // Possible statuses: creator, administrator, member, restricted, left, kicked
+    const is_member = ["creator", "administrator", "member"].includes(member_status);
+  
+    return {
+      is_member,
+      status: member_status,
+      user: data.result.user
+    };
+  } catch(error){
+    console.log(error);
+    return
+  }
+}
+
+export async function hasJoinedAllChannels(user_id: number , bot_id: string){
+
+  try {
+    
+    const channels = await getBotChannels(bot_id)
+    
+    if(!channels) return
+
+    const has_joined = (await Promise.all(channels.map((c) => checkChannelMember(c.channel_id , user_id)))).every(r => r?.is_member)
+    
+    if(has_joined) return { status: true , channels: [] }
+    
+    const populated_channels: TelegramChat[] = (await Promise.all(channels.map(c => getChannelInfo(c.channel_id)))).filter(c => !!c)
+
+    return { status: false , channels: populated_channels }
+
+  } catch (error) {
+    console.log(error)
+    return
+  }
+}
+
+async function getChannelInfo(channelId: string) : Promise<TelegramChat | undefined> {
+  try {
+    const url = `https://api.telegram.org/bot${Deno.env.get("TELEGRAM_BOT_TOKEN")}/getChat`;
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: channelId, // Can be @username or numeric ID like -1001234567890
+      }),
+    });
+  
+    const data = await response.json();
+    
+    if (!data.ok) {
+      throw new Error(`Telegram API error: ${data.description}`);
+    }
+  
+    return data.result;
+    
+  } catch (error) {
+    console.log(error)
+    return
   }
 }

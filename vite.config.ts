@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [fresh(), tailwindcss()],
   server: {
     allowedHosts: [
-      "teacher-certification-pipe-exposed.trycloudflare.com"
+      "met-groups-percentage-investments.trycloudflare.com"
     ]
   }
 });
