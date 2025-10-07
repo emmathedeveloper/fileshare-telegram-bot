@@ -390,8 +390,6 @@ class WebhookPrivateMessageHandler {
                   bot_id: bot.id,
                   chat_id: message.chat.id.toString()
                 }).returning();
-
-                console.log(file);
               },
             );
           }
