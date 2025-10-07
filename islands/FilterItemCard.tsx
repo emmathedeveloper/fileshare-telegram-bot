@@ -48,6 +48,7 @@ const FilterItemCard = ({ item , items }: FilterItemCardProps) => {
         <p class="mb-4">
           {item.user.bio}
         </p>
+<p>ACCESS FOR: {item.bot_info?.username}</p>
         {item.status == "pending" &&
           (
             <button
