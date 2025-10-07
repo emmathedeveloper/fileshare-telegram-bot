@@ -23,7 +23,7 @@ export const handler = define.handlers({
         try {
           // Get bot and decrypt token
           const bot = await db.query.bots.findFirst({
-            where: eq(bots.id, file.bot_id || "9e9c34c0-f6b2-48f6-8620-ee887220ad11"),
+            where: eq(bots.id, file.bot_id),
           });
           if (!bot) continue;
 
