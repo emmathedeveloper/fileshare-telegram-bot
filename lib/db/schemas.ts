@@ -48,7 +48,7 @@ export const bots = pgTable("bots", {
 
 export const bot_channels = pgTable("bot_channels", {
   bot_id: uuid("bot_id").references(() => bots.id).notNull(),
-  channel_id: uuid("channel_id").references(() => registered_channels.id).notNull(),
+  channel_id: uuid("channel_id").references(() => registered_channels.id, { onDelete: "cascade" }).notNull(),
   added_at: timestamp("added_at").defaultNow().notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
