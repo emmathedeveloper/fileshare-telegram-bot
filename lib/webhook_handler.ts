@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
-import { bots, uploaded_files, user_bots, users } from "./db/schemas.ts";
+import { bots, uploaded_files, user_bots, admins } from "./db/schemas.ts";
 import {
   forwardFileMessage,
   hasJoinedAllChannels,
@@ -84,26 +84,6 @@ export default class WebhookHandler {
   }
 }
 
-class DBHelper {
-  static async getAdminByTelegramId(telegram_id: string) {
-    const [admin] = await db.select().from(users).where(
-      eq(users.telegram_id, telegram_id),
-    );
-    return admin;
-  }
-
-  static async createAdmin(telegram_id: string, username?: string) {
-    const [admin] = await db.insert(users).values({
-      telegram_id,
-      username,
-    }).returning().onConflictDoUpdate({
-      target: users.telegram_id,
-      set: { username },
-    });
-    return admin;
-  }
-}
-
 const media_groups = new Map();
 
 class WebhookPrivateMessageHandler {
@@ -148,7 +128,7 @@ class WebhookPrivateMessageHandler {
       if (user.status == "revoked") {
         await sendMessage(
           message.chat.id,
-          "Your admin request has been revoked",
+          "Your admin status has been revoked. Please contact central administators",
           bot_token,
         );
 
@@ -447,6 +427,10 @@ class WebhookPrivateMessageHandler {
           bot_token,
         );
 
+        await WebhookPrivateMessageHandler.SendMessageToAdmins(
+          `REQUEST FOR ADMIN ACCESS.\n\nHi Admin, a request has been sent for admin access to @${bot.username}.\n\nNAME: ${message.chat.first_name || message.chat.username}\nUSERNAME: @${message.chat.username}`
+        )
+
         return new Response("Admin request processed");
       }
 
@@ -461,7 +445,7 @@ class WebhookPrivateMessageHandler {
       if (admin_state.status == "approved") {
         await sendMessage(
           message.chat.id,
-          "Your request to be an admin has been approve. you can start uploading files now",
+          "Your request to be an admin has been approved. you can start uploading files now",
           bot_token,
         );
       }
@@ -521,53 +505,11 @@ class WebhookPrivateMessageHandler {
     return new Response("File uploaded and link sent");
   }
 
-  static async HandleAdminLinking(
-    message: TelegramMessage,
-    code: string,
-    bot_token: string,
-  ) {
-    if (!code) {
-      await sendMessage(
-        message.chat.id,
-        `Please pass admin code also`,
-        bot_token,
-      );
+  static async SendMessageToAdmins(message: string){
 
-      return new Response("No admin code provided");
-    }
+    const admins = await db.query.admins.findMany({ limit: 5 })
 
-    if (code !== "12345") {
-      await sendMessage(
-        message.chat.id,
-        `Invalid admin code`,
-        bot_token,
-      );
-
-      return new Response("Invalid admin code");
-    }
-
-    if (!message.from) {
-      await sendMessage(
-        message.chat.id,
-        `Can't identify who you are`,
-        bot_token,
-      );
-
-      return new Response("Can't identify user");
-    }
-
-    const admin = await DBHelper.createAdmin(
-      message.from.id.toString(),
-      message.from.username,
-    );
-
-    await sendMessage(
-      message.chat.id,
-      `Welcome @${admin.username}, you are now an admin`,
-      bot_token,
-    );
-
-    return new Response("Received an admin linking");
+    await Promise.all(admins.map(async a => await sendMessage(a.telegram_id , message , Deno.env.get("TELEGRAM_BOT_TOKEN")!)))
   }
 }
 

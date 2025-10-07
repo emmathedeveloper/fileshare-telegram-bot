@@ -1,5 +1,5 @@
 import { define } from "../../../utils.ts";
-import { FaCog, FaHome, FaRobot } from "react-icons/fa";
+import { FaCog, FaHome, FaRobot, FaUserEdit } from "react-icons/fa";
 
 export default define.layout(({ Component }) => {
   const links = [
@@ -17,6 +17,11 @@ export default define.layout(({ Component }) => {
       icon: FaCog,
       text: "Settings",
       href: "/dashboard/settings",
+    },
+    {
+      icon: FaUserEdit,
+      text: "Access control",
+      href: "/dashboard/access-control",
     },
   ];
 

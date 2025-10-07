@@ -1,6 +1,5 @@
 import { getBotChannels } from "./db/helpers.ts";
-import { db } from "./db/index.ts";
-import { registered_channels, uploaded_files } from "./db/schemas.ts";
+import { uploaded_files } from "./db/schemas.ts";
 import {
   ReplyMarkup,
   SendMessagePayload,
@@ -11,7 +10,7 @@ export const TELEGRAM_API_BASE = (token: string) =>
   `https://api.telegram.org/bot${token}`;
 
 export async function sendMessage(
-  chat_id: number,
+  chat_id: number | string,
   text: string,
   bot_token: string,
   reply_markup?: ReplyMarkup,
@@ -221,5 +220,22 @@ export async function getChannelInfo(channelId: string) : Promise<TelegramChat |
   } catch (error) {
     console.log(error)
     return
+  }
+}
+
+export async function getUserInfo(user_telegram_id: string, token: string) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getChat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: user_telegram_id }),
+    });
+
+    const data = await res.json();
+
+    return data.result as TelegramChat;
+  } catch (error) {
+    console.log(error);
+    return;
   }
 }

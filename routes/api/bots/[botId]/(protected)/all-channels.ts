@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { db } from "../../../../lib/db/index.ts";
-import { define } from "../../../../utils.ts";
-import { bot_channels, registered_channels } from "../../../../lib/db/schemas.ts";
-import { getChannelInfo } from "../../../../lib/helpers.ts";
+import { db } from "../../../../../lib/db/index.ts";
+import { define } from "../../../../../utils.ts";
+import { bot_channels, registered_channels } from "../../../../../lib/db/schemas.ts";
+import { getChannelInfo } from "../../../../../lib/helpers.ts";
 
 
 

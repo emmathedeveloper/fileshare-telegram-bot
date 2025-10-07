@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "../../../../lib/db/index.ts";
-import { bot_channels, bots } from "../../../../lib/db/schemas.ts";
-import { define } from "../../../../utils.ts";
+import { db } from "../../../../../lib/db/index.ts";
+import { bot_channels, bots } from "../../../../../lib/db/schemas.ts";
+import { define } from "../../../../../utils.ts";
 
 export const handler = define.handlers({
   GET: async (ctx) => {

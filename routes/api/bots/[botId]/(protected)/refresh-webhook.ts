@@ -1,6 +1,6 @@
-import { db } from "../../../../lib/db/index.ts";
-import { decrypt } from "../../../../lib/utils.ts";
-import { define } from "../../../../utils.ts";
+import { db } from "../../../../../lib/db/index.ts";
+import { decrypt } from "../../../../../lib/utils.ts";
+import { define } from "../../../../../utils.ts";
 
 export const handler = define.handlers({
   GET: async (ctx) => {

@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-export const users = pgTable("admins", {
+export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text("telegram_id").notNull().unique(),
   username: text("username").default("user"),
@@ -25,8 +25,7 @@ export const uploaded_files = pgTable("uploaded_files", {
   file_name: text("file_name").notNull(),
   file_size: text("file_size").notNull(),
   media_group_id: text("media_group_id").default(""),
-  uploader_id: text("uploader_id").references(() => users.telegram_id)
-    .notNull(),
+  uploader_id: text("uploader_id").notNull(),
   uploader_chat_id: text("uploader_chat_id").notNull(),
   message_id: text("message_id").notNull().unique(),
   bot_id: uuid("bot_id").references(() => bots.id),
@@ -58,7 +57,7 @@ export const bot_channels = pgTable("bot_channels", {
 
 export const user_bots = pgTable("user_bots" , {
   id: uuid("id").primaryKey().defaultRandom(),
-  user_telegram_id: text("user_id").notNull(),
+  user_telegram_id: text("user_telegram_id").notNull(),
   bot_id: uuid("bot_id").references(() => bots.id).notNull(),
   status: text("status").default("pending").notNull(),
   upload_step: jsonb("upload_step").$type<{ status: string , data?: any }>().default({ status: "idle" , data: "" }).notNull(),

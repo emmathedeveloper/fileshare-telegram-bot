@@ -7,7 +7,7 @@
 - Updated the webhook handler to return a processed response.
 - Added drizzle configuration for PostgreSQL database connection.
 - Created database index file to initialize the database connection.
-- Defined database schemas for users and uploaded files tables.
+- Defined database schemas for admins and uploaded files tables.
 
 ## feat: add webhook handler and database schemas for file uploads and channel linking
 
@@ -41,6 +41,8 @@ Add dashboard layout, bot management, and login functionality; refactor styles a
 
 Add channel management features: implement channel connection/disconnection, enhance bot webhook handling, and improve UI components
 
-# 6 - 10 - 25
+# 7 - 10 - 25
 
-Refactor database schema references from admins to users and enhance user management in webhook handler
+Refactor database schema references from admins to admins and enhance user management in webhook handler
+
+Refactor user management: update database schema references, enhance access control features, and implement user approval workflow

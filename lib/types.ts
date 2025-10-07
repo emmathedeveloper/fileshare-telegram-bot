@@ -46,7 +46,8 @@ export type TelegramChat = {
   username?: string;
   first_name?: string;
   last_name?: string;
-  invite_link?: string
+  invite_link?: string,
+  bio?: string
 };
 
 export type TelegramMessageEntity = {

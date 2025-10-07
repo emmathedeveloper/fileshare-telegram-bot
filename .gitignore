@@ -14,5 +14,6 @@ vendor/
 crypt.ts
 admins.csv
 uploaded_files.csv
+user_bots.csv
 migrate.ts
 todo.md

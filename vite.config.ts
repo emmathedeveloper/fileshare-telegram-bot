@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [fresh(), tailwindcss()],
   server: {
     allowedHosts: [
-      "met-groups-percentage-investments.trycloudflare.com"
+      "tulsa-billing-excluding-humidity.trycloudflare.com"
     ]
   }
 });
