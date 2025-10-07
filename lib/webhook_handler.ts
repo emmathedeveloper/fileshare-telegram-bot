@@ -389,7 +389,7 @@ class WebhookPrivateMessageHandler {
                   message_id,
                   bot_id: bot.id,
                   chat_id: message.chat.id.toString()
-                }).returning();
+                })
               },
             );
           }
@@ -418,7 +418,7 @@ class WebhookPrivateMessageHandler {
               message_id,
               bot_id: bot.id,
               chat_id: message.chat.id.toString()
-            }).returning();
+            })
           },
         );
       }
