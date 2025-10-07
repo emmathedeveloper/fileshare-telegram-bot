@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Send POST request to endpoint
         run: |
-          curl -X DELETE {{ secrets.CLEAN_UP_ENDPOINT }}
+          curl -X DELETE ${{ secrets.CLEAN_UP_ENDPOINT }}
