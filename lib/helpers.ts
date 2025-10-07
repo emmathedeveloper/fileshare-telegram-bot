@@ -177,6 +177,7 @@ export async function checkChannelMember(channel_id: string, user_id: number) {
     };
   } catch(error){
     console.log(error);
+    console.log((error as Error).message || "Invalid Request")
     return
   }
 }
