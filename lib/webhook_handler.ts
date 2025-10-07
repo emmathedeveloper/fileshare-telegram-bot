@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
 import {
-  admins,
   bots,
   sent_files,
   uploaded_files,
@@ -560,7 +559,7 @@ class WebhookPrivateMessageHandler {
 class WebhookCallbackQueryHandler {
   static async HandleCallbackQuery(
     callback_query: TelegramCallbackQuery,
-    bot: typeof bots.$inferSelect,
+    _: typeof bots.$inferSelect,
     bot_token: string,
   ) {
     if (callback_query.data === "upload_movie") {
