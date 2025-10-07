@@ -4,6 +4,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -12,10 +13,7 @@ export const users = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text("telegram_id").notNull().unique(),
   username: text("username").default("user"),
-  upload_step: jsonb("upload_step").$type<{ status: string; data?: any }>().default({
-    status: "idle",
-    data: "",
-  }).notNull(), // idle, uploading waiting_for_caption, waiting_for_thumbnail,
+  // upload_step: jsonb("upload_step").$type<Record<string ,{ status: string; data?: any }>>().default({}).notNull(), // idle, uploading waiting_for_caption, waiting_for_thumbnail,
   role: text("role").default("user").notNull(),
   added_at: timestamp("added_at").defaultNow().notNull(),
 });
@@ -31,6 +29,7 @@ export const uploaded_files = pgTable("uploaded_files", {
     .notNull(),
   uploader_chat_id: text("uploader_chat_id").notNull(),
   message_id: text("message_id").notNull().unique(),
+  bot_id: uuid("bot_id").references(() => bots.id),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -58,12 +57,14 @@ export const bot_channels = pgTable("bot_channels", {
 ]);
 
 export const user_bots = pgTable("user_bots" , {
-  user_telegram_id: uuid("user_id").notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_telegram_id: text("user_id").notNull(),
   bot_id: uuid("bot_id").references(() => bots.id).notNull(),
   status: text("status").default("pending").notNull(),
+  upload_step: jsonb("upload_step").$type<{ status: string , data?: any }>().default({ status: "idle" , data: "" }).notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  primaryKey({ columns: [table.bot_id, table.user_telegram_id] }),
+  unique("user_bot_unique_id").on(table.bot_id, table.user_telegram_id)
 ])
 
 //Many channels to one both
