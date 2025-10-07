@@ -13,7 +13,6 @@ export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text("telegram_id").notNull().unique(),
   username: text("username").default("user"),
-  // upload_step: jsonb("upload_step").$type<Record<string ,{ status: string; data?: any }>>().default({}).notNull(), // idle, uploading waiting_for_caption, waiting_for_thumbnail,
   role: text("role").default("user").notNull(),
   added_at: timestamp("added_at").defaultNow().notNull(),
 });
