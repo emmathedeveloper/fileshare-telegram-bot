@@ -414,13 +414,11 @@ class WebhookPrivateMessageHandler {
         // Forward original message
         await forwardFileMessage(message.chat.id, item, bot_token).then(
           async (message_id) => {
-            const [file] = await db.insert(sent_files).values({
+            await db.insert(sent_files).values({
               message_id,
               bot_id: bot.id,
               chat_id: message.chat.id.toString()
             }).returning();
-
-            console.log(file);
           },
         );
       }
