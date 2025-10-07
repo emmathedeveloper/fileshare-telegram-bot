@@ -1,6 +1,12 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
-import { bots, uploaded_files, user_bots, admins } from "./db/schemas.ts";
+import {
+  admins,
+  bots,
+  sent_files,
+  uploaded_files,
+  user_bots,
+} from "./db/schemas.ts";
 import {
   forwardFileMessage,
   hasJoinedAllChannels,
@@ -98,8 +104,11 @@ class WebhookPrivateMessageHandler {
       // );
 
       const user = await db.query.user_bots.findFirst({
-        where: (c, { eq , and }) =>
-          and(eq(c.user_telegram_id, message.from?.id.toString()!) , eq(c.bot_id , bot.id)),
+        where: (c, { eq, and }) =>
+          and(
+            eq(c.user_telegram_id, message.from?.id.toString()!),
+            eq(c.bot_id, bot.id),
+          ),
       });
 
       //check if the user exists
@@ -255,8 +264,11 @@ class WebhookPrivateMessageHandler {
 
     if (command === "/skip") {
       const user = await db.query.user_bots.findFirst({
-        where: (c, { eq , and }) =>
-          and(eq(c.user_telegram_id, message.from?.id.toString()!) , eq(c.bot_id , bot.id)),
+        where: (c, { eq, and }) =>
+          and(
+            eq(c.user_telegram_id, message.from?.id.toString()!),
+            eq(c.bot_id, bot.id),
+          ),
       });
 
       if (!user) {
@@ -372,7 +384,17 @@ class WebhookPrivateMessageHandler {
           }
 
           for (const file of files) {
-            await forwardFileMessage(message.chat.id, file, bot_token);
+            await forwardFileMessage(message.chat.id, file, bot_token).then(
+              async (message_id) => {
+                const [file] = await db.insert(sent_files).values({
+                  message_id,
+                  bot_id: bot.id,
+                  chat_id: message.chat.id.toString()
+                }).returning();
+
+                console.log(file);
+              },
+            );
           }
 
           return new Response("Series files forwarded");
@@ -393,7 +415,17 @@ class WebhookPrivateMessageHandler {
         }
 
         // Forward original message
-        await forwardFileMessage(message.chat.id, item, bot_token);
+        await forwardFileMessage(message.chat.id, item, bot_token).then(
+          async (message_id) => {
+            const [file] = await db.insert(sent_files).values({
+              message_id,
+              bot_id: bot.id,
+              chat_id: message.chat.id.toString()
+            }).returning();
+
+            console.log(file);
+          },
+        );
       }
 
       return new Response("Received a deep link start");
@@ -401,8 +433,11 @@ class WebhookPrivateMessageHandler {
 
     if (command === "/admin" && message.from) {
       const admin_state = await db.query.user_bots.findFirst({
-        where: (c, { eq , and }) =>
-          and(eq(c.user_telegram_id, message.from?.id.toString()!) , eq(c.bot_id , bot.id)),
+        where: (c, { eq, and }) =>
+          and(
+            eq(c.user_telegram_id, message.from?.id.toString()!),
+            eq(c.bot_id, bot.id),
+          ),
       });
 
       if (!admin_state) {
@@ -428,8 +463,10 @@ class WebhookPrivateMessageHandler {
         );
 
         await WebhookPrivateMessageHandler.SendMessageToAdmins(
-          `REQUEST FOR ADMIN ACCESS.\n\nHi Admin, a request has been sent for admin access to @${bot.username}.\n\nNAME: ${message.chat.first_name || message.chat.username}\nUSERNAME: @${message.chat.username}`
-        )
+          `REQUEST FOR ADMIN ACCESS.\n\nHi Admin, a request has been sent for admin access to @${bot.username}.\n\nNAME: ${
+            message.chat.first_name || message.chat.username
+          }\nUSERNAME: @${message.chat.username}`,
+        );
 
         return new Response("Admin request processed");
       }
@@ -505,11 +542,18 @@ class WebhookPrivateMessageHandler {
     return new Response("File uploaded and link sent");
   }
 
-  static async SendMessageToAdmins(message: string){
+  static async SendMessageToAdmins(message: string) {
+    const admins = await db.query.admins.findMany({ limit: 5 });
 
-    const admins = await db.query.admins.findMany({ limit: 5 })
-
-    await Promise.all(admins.map(async a => await sendMessage(a.telegram_id , message , Deno.env.get("TELEGRAM_BOT_TOKEN")!)))
+    await Promise.all(
+      admins.map(async (a) =>
+        await sendMessage(
+          a.telegram_id,
+          message,
+          Deno.env.get("TELEGRAM_BOT_TOKEN")!,
+        )
+      ),
+    );
   }
 }
 

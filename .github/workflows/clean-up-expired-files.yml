@@ -1,0 +1,15 @@
+name: Ping Endpoint Every 5 Minutes
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch: # (optional) allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send POST request to endpoint
+        run: |
+          curl -X DELETE {{ secrets.CLEAN_UP_ENDPOINT }}

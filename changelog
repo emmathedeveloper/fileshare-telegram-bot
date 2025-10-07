@@ -46,3 +46,5 @@ Add channel management features: implement channel connection/disconnection, enh
 Refactor database schema references from admins to admins and enhance user management in webhook handler
 
 Refactor user management: update database schema references, enhance access control features, and implement user approval workflow
+
+Add scheduled cleanup job for old files and enhance file management features

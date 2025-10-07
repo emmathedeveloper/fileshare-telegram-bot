@@ -43,7 +43,7 @@ export async function forwardFileMessage(
   reply_markup?: ReplyMarkup,
 ) {
   try {
-    await fetch(
+    const response = await fetch(
       `${TELEGRAM_API_BASE(bot_token)}/copyMessage`,
       {
         method: "POST",
@@ -56,8 +56,16 @@ export async function forwardFileMessage(
         }),
       },
     );
+
+    if(!response.ok) return
+
+    const data = await response.json()
+
+    return data.result.message_id
+
   } catch (error) {
     console.log(error);
+    return
   }
 }
 

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [fresh(), tailwindcss()],
   server: {
     allowedHosts: [
-      "tulsa-billing-excluding-humidity.trycloudflare.com"
+      "fountain-most-tuesday-ports.trycloudflare.com"
     ]
   }
 });
