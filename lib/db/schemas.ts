@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-export const admins = pgTable("admins", {
+export const users = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
   telegram_id: text("telegram_id").notNull().unique(),
   username: text("username").default("user"),
@@ -16,6 +16,7 @@ export const admins = pgTable("admins", {
     status: "idle",
     data: "",
   }).notNull(), // idle, uploading waiting_for_caption, waiting_for_thumbnail,
+  role: text("role").default("user").notNull(),
   added_at: timestamp("added_at").defaultNow().notNull(),
 });
 
@@ -26,7 +27,7 @@ export const uploaded_files = pgTable("uploaded_files", {
   file_name: text("file_name").notNull(),
   file_size: text("file_size").notNull(),
   media_group_id: text("media_group_id").default(""),
-  uploader_id: text("uploader_id").references(() => admins.telegram_id)
+  uploader_id: text("uploader_id").references(() => users.telegram_id)
     .notNull(),
   uploader_chat_id: text("uploader_chat_id").notNull(),
   message_id: text("message_id").notNull().unique(),
@@ -51,9 +52,19 @@ export const bot_channels = pgTable("bot_channels", {
   bot_id: uuid("bot_id").references(() => bots.id).notNull(),
   channel_id: uuid("channel_id").references(() => registered_channels.id).notNull(),
   added_at: timestamp("added_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.bot_id, table.channel_id] }),
 ]);
+
+export const user_bots = pgTable("user_bots" , {
+  user_telegram_id: uuid("user_id").notNull(),
+  bot_id: uuid("bot_id").references(() => bots.id).notNull(),
+  status: text("status").default("pending").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.bot_id, table.user_telegram_id] }),
+])
 
 //Many channels to one both
 export const bots_relations = relations(
@@ -83,3 +94,10 @@ export const bot_channels_relations = relations(bot_channels, ({ one }) => ({
     references: [registered_channels.id],
   }),
 }));
+
+export const user_bot_relations = relations(user_bots , ({ one }) => ({
+  bot: one(bots , {
+    fields: [user_bots.bot_id],
+    references: [bots.id]
+  })
+}))

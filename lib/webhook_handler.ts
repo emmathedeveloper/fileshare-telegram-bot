@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
-import { admins, bots, uploaded_files } from "./db/schemas.ts";
+import { bots, uploaded_files, user_bots, users } from "./db/schemas.ts";
 import {
   forwardFileMessage,
   hasJoinedAllChannels,
@@ -48,7 +48,7 @@ export default class WebhookHandler {
 
   static async InsertFileRecord(
     message: TelegramMessage,
-    admin: typeof admins.$inferSelect,
+    admin: typeof users.$inferSelect,
   ) {
     //save the file to the database
     const [file_record] = await db.insert(uploaded_files).values({
@@ -84,18 +84,18 @@ export default class WebhookHandler {
 
 class DBHelper {
   static async getAdminByTelegramId(telegram_id: string) {
-    const [admin] = await db.select().from(admins).where(
-      eq(admins.telegram_id, telegram_id),
+    const [admin] = await db.select().from(users).where(
+      eq(users.telegram_id, telegram_id),
     );
     return admin;
   }
 
   static async createAdmin(telegram_id: string, username?: string) {
-    const [admin] = await db.insert(admins).values({
+    const [admin] = await db.insert(users).values({
       telegram_id,
       username,
     }).returning().onConflictDoUpdate({
-      target: admins.telegram_id,
+      target: users.telegram_id,
       set: { username },
     });
     return admin;
@@ -147,21 +147,19 @@ class WebhookPrivateMessageHandler {
             `
         Files uploaded successfully!.
 
-        Download link: https://t.me/${
-              bot.username
-            }?start=series_${media_group_id}
+        Download link: https://t.me/${bot.username}?start=series_${media_group_id}
       `,
             bot_token,
           );
 
           media_groups.delete(media_group_id);
 
-          await db.update(admins).set({
+          await db.update(users).set({
             upload_step: {
               status: "waiting_for_series_caption_art",
               data: media_group_id,
             },
-          }).where(eq(admins.id, admin.id));
+          }).where(eq(users.id, admin.id));
 
           sendMessage(
             message.chat.id,
@@ -192,9 +190,9 @@ class WebhookPrivateMessageHandler {
           return new Response("Waiting for valid caption art");
         }
 
-        await db.update(admins).set({
+        await db.update(users).set({
           upload_step: { status: "idle", data: "" },
-        }).where(eq(admins.id, admin.id));
+        }).where(eq(users.id, admin.id));
 
         const file_record = await WebhookHandler.InsertFileRecord(
           message,
@@ -210,9 +208,7 @@ class WebhookPrivateMessageHandler {
           {
             inline_keyboard: [[{
               text: "⬇️ DOWNLOAD HERE ⬇️",
-              url: `https://t.me/${
-                bot.username
-              }?start=${
+              url: `https://t.me/${bot.username}?start=${
                 admin.upload_step.status == "waiting_for_series_caption_art"
                   ? "series_"
                   : ""
@@ -272,9 +268,7 @@ class WebhookPrivateMessageHandler {
           `
         Caption art skipped. Upload process completed.
 
-        Download link: https://t.me/${
-            bot.username
-          }?start=${
+        Download link: https://t.me/${bot.username}?start=${
             admin.upload_step.status == "waiting_for_series_caption_art"
               ? "series_"
               : ""
@@ -283,10 +277,10 @@ class WebhookPrivateMessageHandler {
           bot_token,
         );
 
-        await db.update(admins).set({
+        await db.update(users).set({
           upload_step: { status: "idle", data: "" },
         })
-          .where(eq(admins.id, admin.id));
+          .where(eq(users.id, admin.id));
 
         return new Response("Skipped caption art");
       }
@@ -334,8 +328,13 @@ class WebhookPrivateMessageHandler {
             bot_token,
             {
               inline_keyboard: [
-                ...channels.map((c) => [{ text: c.title!, url: c.invite_link }]),
-                [{ text: "♻️ Try Again ♻️" , url: `https://t.me/${bot.username}?start=${payload}` }]
+                ...channels.map((
+                  c,
+                ) => [{ text: c.title!, url: c.invite_link }]),
+                [{
+                  text: "♻️ Try Again ♻️",
+                  url: `https://t.me/${bot.username}?start=${payload}`,
+                }],
               ],
             },
           );
@@ -387,13 +386,45 @@ class WebhookPrivateMessageHandler {
       return new Response("Received a deep link start");
     }
 
-    if (command === "/admin") {
-      //handle admin linking
-      return await WebhookPrivateMessageHandler.HandleAdminLinking(
-        message,
-        payload || "",
-        bot_token,
-      );
+    if (command === "/admin" && message.from) {
+
+      const admin_state = await db.query.user_bots.findFirst({
+        where: (c, { eq }) =>
+          eq(c.user_telegram_id, message.from?.id.toString()!),
+      });
+
+      if(!admin_state) {
+
+        const [ record ] = await db.insert(user_bots).values({
+          user_telegram_id: message.from.id.toString(),
+          bot_id: bot.id,
+        }).returning()
+
+        if(!record){
+          await sendMessage(message.chat.id , "Couldn't process admin request" , bot_token)
+          
+          return new Response("Couldn't process admin request")
+        } 
+        
+        
+        await sendMessage(message.chat.id , "Your request to be an admin has been sent and is pending approval" , bot_token)
+        
+        return new Response("Admin request processed")
+      }
+      
+      if(admin_state.status == "pending") {
+        await sendMessage(message.chat.id , "Your request to be an admin has been sent and is pending approval" , bot_token)
+      }
+
+      if(admin_state.status == "approved") {
+        await sendMessage(message.chat.id , "Your request to be an admin has been approve. you can start uploading files now" , bot_token)
+      }
+
+      if(admin_state.status == "revoked") {
+        await sendMessage(message.chat.id , "Your admin access has been revoked" , bot_token)
+      }
+      
+      return new Response("Admin request processed")
     }
 
     return new Response("Received a private message");
@@ -401,7 +432,7 @@ class WebhookPrivateMessageHandler {
 
   static async HandleFileUpload(
     message: TelegramMessage,
-    admin: typeof admins.$inferSelect,
+    admin: typeof users.$inferSelect,
     bot: typeof bots.$inferSelect,
     bot_token: string,
   ) {
@@ -413,21 +444,19 @@ class WebhookPrivateMessageHandler {
 
     if (!file_record) throw new Error("Failed to save file");
 
-    await db.update(admins).set({
+    await db.update(users).set({
       upload_step: {
         status: "waiting_for_file_caption_art",
         data: file_record.id,
       },
-    }).where(eq(admins.id, admin.id));
+    }).where(eq(users.id, admin.id));
 
     await sendMessage(
       message.chat.id,
       `
         File uploaded successfully!.
 
-    Download link: https://t.me/${
-        bot.username
-      }?start=${file_record.id}
+    Download link: https://t.me/${bot.username}?start=${file_record.id}
       `,
       bot_token,
     );
