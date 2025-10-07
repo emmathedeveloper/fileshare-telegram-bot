@@ -53,6 +53,8 @@ export const handler = define.handlers({
         }
       }
 
+      console.log(`DELETED ${deletedCount} FILE(S) AND THEIR MESSAGES.`)
+
       return new Response(
         `Deleted ${deletedCount} files and their Telegram messages.`,
         { status: 200 },
