@@ -57,11 +57,12 @@ export async function forwardFileMessage(
       },
     );
 
-    if(!response.ok) return
+    console.log(response)
 
+    if(!response.ok) return
     
     const data = await response.json()
-    console.log(data)
+    // console.log(data)
 
     return data.result.message_id
 
