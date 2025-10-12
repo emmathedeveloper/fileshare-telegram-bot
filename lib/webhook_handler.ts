@@ -378,7 +378,6 @@ class WebhookPrivateMessageHandler {
           }
 
           for (const file of files) {
-            console.log("series:" , file, bot_token);
             await forwardFileMessage(message.chat.id, file, bot_token).then(
               async (message_id) => {
                 if (message_id) {
@@ -387,11 +386,17 @@ class WebhookPrivateMessageHandler {
                     bot_id: bot.id,
                     chat_id: message.chat.id.toString(),
                   });
+                } else {
+                  await sendMessage(
+                    message.chat.id,
+                    "Couldn't send this file. Seems like this file doesn't exist anymore",
+                    bot_token,
+                  );
                 }
               },
             );
           }
-          
+
           await sendMessage(
             message.chat.id,
             `
@@ -419,8 +424,6 @@ class WebhookPrivateMessageHandler {
           return new Response("File not found");
         }
 
-        console.log(item, bot_token);
-
         // Forward original message
         await forwardFileMessage(message.chat.id, item, bot_token).then(
           async (message_id) => {
@@ -439,6 +442,12 @@ class WebhookPrivateMessageHandler {
             𝗕𝗲𝗳𝗼𝗿𝗲 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝗘𝗽𝗶𝘀𝗼𝗱𝗲(𝘀) 𝗣𝗹𝗲𝗮𝘀𝗲 𝗙𝗼𝗿𝘄𝗮𝗿𝗱 𝗧𝗵𝗲𝗺 𝘁𝗼 𝗦𝗮𝘃𝗲𝗱 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗼𝗿 𝗔𝗻𝗼𝘁𝗵𝗲𝗿 𝗖𝗵𝗮t.
             𝗧𝗵𝗲𝘆 𝗪𝗶𝗹𝗹 𝗕𝗲 𝗗𝗲𝗹𝗲𝘁𝗲𝗱 𝗜𝗻 𝟯𝟬 𝗠𝗶𝗻𝘂𝘁𝗲𝘀 𝗧𝗼 𝗔𝘃𝗼𝗶𝗱 𝗖𝗼𝗽𝘆𝗿𝗶𝗴𝗵𝘁 𝗶𝘀𝘀𝘂𝗲𝘀
             `,
+                bot_token,
+              );
+            } else {
+              await sendMessage(
+                message.chat.id,
+                "Couldn't send this file. Seems like this file doesn't exist anymore",
                 bot_token,
               );
             }
