@@ -26,7 +26,7 @@ export const uploaded_files = pgTable("uploaded_files", {
   media_group_id: text("media_group_id").default(""),
   uploader_id: text("uploader_id").notNull(),
   uploader_chat_id: text("uploader_chat_id").notNull(),
-  message_id: text("message_id").notNull().unique(),
+  message_id: text("message_id").notNull(),
   bot_id: uuid("bot_id").references(() => bots.id),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
