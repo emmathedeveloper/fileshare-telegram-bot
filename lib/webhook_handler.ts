@@ -378,6 +378,7 @@ class WebhookPrivateMessageHandler {
           }
 
           for (const file of files) {
+            console.log("series:" , file, bot_token);
             await forwardFileMessage(message.chat.id, file, bot_token).then(
               async (message_id) => {
                 if (message_id) {
