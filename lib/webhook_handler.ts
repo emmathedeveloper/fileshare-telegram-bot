@@ -1,11 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
-import {
-  bots,
-  sent_files,
-  uploaded_files,
-  user_bots,
-} from "./db/schemas.ts";
+import { bots, sent_files, uploaded_files, user_bots } from "./db/schemas.ts";
 import {
   forwardFileMessage,
   hasJoinedAllChannels,
@@ -385,25 +380,26 @@ class WebhookPrivateMessageHandler {
           for (const file of files) {
             await forwardFileMessage(message.chat.id, file, bot_token).then(
               async (message_id) => {
-                if(message_id) await db.insert(sent_files).values({
-                  message_id,
-                  bot_id: bot.id,
-                  chat_id: message.chat.id.toString()
-                })
+                if (message_id) {
+                  await db.insert(sent_files).values({
+                    message_id,
+                    bot_id: bot.id,
+                    chat_id: message.chat.id.toString(),
+                  });
+                  await sendMessage(
+                    message.chat.id,
+                    `
+                ⚠️ 𝗪𝗔𝗥𝗡𝗜𝗡𝗚 ⚠️ 
+                
+                𝗕𝗲𝗳𝗼𝗿𝗲 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝗘𝗽𝗶𝘀𝗼𝗱𝗲(𝘀) 𝗣𝗹𝗲𝗮𝘀𝗲 𝗙𝗼𝗿𝘄𝗮𝗿𝗱 𝗧𝗵𝗲𝗺 𝘁𝗼 𝗦𝗮𝘃𝗲𝗱 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗼𝗿 𝗔𝗻𝗼𝘁𝗵𝗲𝗿 𝗖𝗵𝗮𝘁.
+                𝗧𝗵𝗲𝘆 𝗪𝗶𝗹𝗹 𝗕𝗲 𝗗𝗲𝗹𝗲𝘁𝗲𝗱 𝗜𝗻 𝟯𝟬 𝗠𝗶𝗻𝘂𝘁𝗲𝘀 𝗧𝗼 𝗔𝘃𝗼𝗶𝗱 𝗖𝗼𝗽𝘆𝗿𝗶𝗴𝗵𝘁 𝗶𝘀𝘀𝘂𝗲𝘀
+                `,
+                    bot_token,
+                  );
+                }
               },
             );
           }
-
-await sendMessage(
-message.chat.id,
-`
-⚠️ 𝗪𝗔𝗥𝗡𝗜𝗡𝗚 ⚠️ 
-
-𝗕𝗲𝗳𝗼𝗿𝗲 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝗘𝗽𝗶𝘀𝗼𝗱𝗲(𝘀) 𝗣𝗹𝗲𝗮𝘀𝗲 𝗙𝗼𝗿𝘄𝗮𝗿𝗱 𝗧𝗵𝗲𝗺 𝘁𝗼 𝗦𝗮𝘃𝗲𝗱 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗼𝗿 𝗔𝗻𝗼𝘁𝗵𝗲𝗿 𝗖𝗵𝗮𝘁.
-𝗧𝗵𝗲𝘆 𝗪𝗶𝗹𝗹 𝗕𝗲 𝗗𝗲𝗹𝗲𝘁𝗲𝗱 𝗜𝗻 𝟯𝟬 𝗠𝗶𝗻𝘂𝘁𝗲𝘀 𝗧𝗼 𝗔𝘃𝗼𝗶𝗱 𝗖𝗼𝗽𝘆𝗿𝗶𝗴𝗵𝘁 𝗶𝘀𝘀𝘂𝗲𝘀
-`,
-bot_token
-)
 
           return new Response("Series files forwarded");
         }
@@ -422,29 +418,31 @@ bot_token
           return new Response("File not found");
         }
 
-        console.log(item , bot_token)
+        console.log(item, bot_token);
 
         // Forward original message
         await forwardFileMessage(message.chat.id, item, bot_token).then(
           async (message_id) => {
-            if(message_id) await db.insert(sent_files).values({
-              message_id,
-              bot_id: bot.id,
-              chat_id: message.chat.id.toString()
-            })
+            if (message_id) {
+              await db.insert(sent_files).values({
+                message_id,
+                bot_id: bot.id,
+                chat_id: message.chat.id.toString(),
+              });
+
+              await sendMessage(
+                message.chat.id,
+                `
+            ⚠️ 𝗪𝗔𝗥𝗡𝗜𝗡𝗚 ⚠️ 
+            
+            𝗕𝗲𝗳𝗼𝗿𝗲 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝗘𝗽𝗶𝘀𝗼𝗱𝗲(𝘀) 𝗣𝗹𝗲𝗮𝘀𝗲 𝗙𝗼𝗿𝘄𝗮𝗿𝗱 𝗧𝗵𝗲𝗺 𝘁𝗼 𝗦𝗮𝘃𝗲𝗱 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗼𝗿 𝗔𝗻𝗼𝘁𝗵𝗲𝗿 𝗖𝗵𝗮t.
+            𝗧𝗵𝗲𝘆 𝗪𝗶𝗹𝗹 𝗕𝗲 𝗗𝗲𝗹𝗲𝘁𝗲𝗱 𝗜𝗻 𝟯𝟬 𝗠𝗶𝗻𝘂𝘁𝗲𝘀 𝗧𝗼 𝗔𝘃𝗼𝗶𝗱 𝗖𝗼𝗽𝘆𝗿𝗶𝗴𝗵𝘁 𝗶𝘀𝘀𝘂𝗲𝘀
+            `,
+                bot_token,
+              );
+            }
           },
         );
-await sendMessage(
-message.chat.id,
-`
-⚠️ 𝗪𝗔𝗥𝗡𝗜𝗡𝗚 ⚠️ 
-
-𝗕𝗲𝗳𝗼𝗿𝗲 𝗗𝗼𝘄𝗻𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝘁𝗵𝗲 𝗘𝗽𝗶𝘀𝗼𝗱𝗲(𝘀) 𝗣𝗹𝗲𝗮𝘀𝗲 𝗙𝗼𝗿𝘄𝗮𝗿𝗱 𝗧𝗵𝗲𝗺 𝘁𝗼 𝗦𝗮𝘃𝗲𝗱 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝗼𝗿 𝗔𝗻𝗼𝘁𝗵𝗲𝗿 𝗖𝗵𝗮t.
-𝗧𝗵𝗲𝘆 𝗪𝗶𝗹𝗹 𝗕𝗲 𝗗𝗲𝗹𝗲𝘁𝗲𝗱 𝗜𝗻 𝟯𝟬 𝗠𝗶𝗻𝘂𝘁𝗲𝘀 𝗧𝗼 𝗔𝘃𝗼𝗶𝗱 𝗖𝗼𝗽𝘆𝗿𝗶𝗴𝗵𝘁 𝗶𝘀𝘀𝘂𝗲𝘀
-`,
-bot_token
-)
-
       }
 
       return new Response("Received a deep link start");
