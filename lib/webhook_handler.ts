@@ -78,7 +78,7 @@ export default class WebhookHandler {
       uploader_id: message.from?.id.toString() || user.user_telegram_id,
       media_group_id: message.media_group_id || "",
       bot_id,
-    }).returning();
+    }).onConflictDoNothing({ target: [uploaded_files.message_id] }).returning();
 
     return file_record;
   }
