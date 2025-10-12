@@ -422,6 +422,8 @@ bot_token
           return new Response("File not found");
         }
 
+        console.log(item , bot_token)
+
         // Forward original message
         await forwardFileMessage(message.chat.id, item, bot_token).then(
           async (message_id) => {
